@@ -28,19 +28,6 @@ module uart_tx(
         counter <= 0;
     end
 
-    always @ (posedge clk && send)
-    begin
-        if (state == idle)
-            begin
-                state <= start;
-                tx_value <= 0;
-                done <= 0;
-                data_value <= data_in;
-                data_index <= 0;
-                counter <= 0;
-            end
-    end
-
     always @ (posedge clk)
     begin
         case (state)
@@ -52,8 +39,12 @@ module uart_tx(
                     end
                 else
                     begin
+                        state <= start;
                         tx_value <= 0;
                         counter <= counter + 1;
+                        done <= 0;
+                        data_value <= data_in;
+                        data_index <= 0;
                     end
             end
             data: begin
@@ -91,8 +82,15 @@ module uart_tx(
                     end
             end
             idle: begin
+                if (send == 1)
+                    begin
+                        state <= start;
+                    end
+                else
+                    begin
+                        state <= idle;
+                    end
                 done <= 0;
-                state <= idle;
                 tx_value <= 1;
                 counter <= 0;
             end
