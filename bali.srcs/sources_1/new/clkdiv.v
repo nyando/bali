@@ -1,5 +1,9 @@
 `timescale 100ns / 10ns
 
+/*
+ * clkdiv - Clock divider with a factor of 100.
+ * TODO: Extend this so that clock scale factor is parametrizable in the module constructor.
+ */
 module clkdiv(
     input clk,
     output divclk
