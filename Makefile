@@ -9,7 +9,7 @@ ifeq ($(OS), Windows_NT)
 endif
 
 # top-level simulation module (DO NOT USE THIS FOR PROGRAMMING THE FPGA)
-SIM_MODULE := test_uart
+SIM_MODULE := test_alu
 
 # HW programming parameters (use this for programming the FPGA)
 MODULE_NAME := uart_led
@@ -27,13 +27,13 @@ SV_SOURCES := \
 	$(SRC_DIR)/clkdiv.sv \
 	$(SRC_DIR)/led_mapper.sv \
 	$(SRC_DIR)/uart_echo.sv \
-	$(SRC_DIR)/uart_rx.sv \
 	$(SRC_DIR)/uart_led.sv \
+	$(SRC_DIR)/uart_rx.sv \
 	$(SRC_DIR)/uart_tx.sv \
 
 SV_SIMS := \
-	$(SIM_DIR)/alu_test.sv \
 	$(SIM_DIR)/sim_clk.sv \
+	$(SIM_DIR)/test_alu.sv \
 	$(SIM_DIR)/test_uart.sv \
 
 SV_OPTS := \
