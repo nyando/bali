@@ -46,6 +46,12 @@ module test_uart();
         send = 1;
         #2000;
         send = 0;
+        #1_000_000
+        assert (byte_out == 8'h99) else
+            $fatal(1, "Output byte received by UART RX does not match input");
+        $display("Testbench passed, UART ready for production use");
+        #200;
+        $finish;
     end
     
 endmodule

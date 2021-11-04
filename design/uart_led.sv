@@ -5,7 +5,7 @@
  * to the Arty A7 FPGA board's LED array.
  * Send it a byte via UART to make it display the values on the eight LEDs.
  */
-module uart_to_led(
+module uart_led(
     input clk,
     input tx,
     output [7:0] led
