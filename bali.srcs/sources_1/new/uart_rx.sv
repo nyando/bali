@@ -38,7 +38,7 @@ module uart_rx (
      * on rising clock edge and stop state:
      *   - if rx high after ~50 us -> stop bit recognized, move to idle
      */
-    always @ (posedge clock)
+    always @ (posedge clk)
         begin
             case (state)
                 idle: begin
