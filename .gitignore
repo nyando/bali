@@ -1,3 +1,6 @@
+# dev environment
+.vscode/
+
 # generated folders
 arty-a7-35/
 bali.cache/
