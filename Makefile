@@ -1,6 +1,6 @@
-##
-## Bali Makefile
-##
+#######################################################################################################################
+##                                                    Bali Makefile                                                  ##
+#######################################################################################################################
 
 # use powershell on windows
 ifeq ($(OS), Windows_NT)
@@ -9,7 +9,7 @@ ifeq ($(OS), Windows_NT)
 endif
 
 # top-level simulation module (DO NOT USE THIS FOR PROGRAMMING THE FPGA)
-TOP_MODULE := test_uart
+SIM_MODULE := test_uart
 
 # HW programming parameters (use this for programming the FPGA)
 MODULE_NAME := uart_led
@@ -49,14 +49,14 @@ compile_sim: compile
 	xvlog --sv $(SV_OPTS) $(SV_SIMS)
 
 elaborate: compile_sim
-	xelab --debug all -top $(TOP_MODULE) -snapshot $(TOP_MODULE)_snapshot
+	xelab --debug all -top $(SIM_MODULE) -snapshot $(SIM_MODULE)_snapshot
 
 simulate: elaborate
-	xsim $(TOP_MODULE)_snapshot -R
+	xsim $(SIM_MODULE)_snapshot -R
 
 simulate_gui: elaborate
-	xsim $(TOP_MODULE)_snapshot --tclbatch $(SCRIPTS_DIR)/xsim_cfg.tcl
-	xsim --gui $(TOP_MODULE)_snapshot.wdb
+	xsim $(SIM_MODULE)_snapshot --tclbatch $(SCRIPTS_DIR)/xsim_cfg.tcl
+	xsim --gui $(SIM_MODULE)_snapshot.wdb
 
 bitstream:
 	vivado -mode batch -source $(SCRIPTS_DIR)/create_bitstream.tcl -tclargs "$(MODULE_NAME)" "$(BOARD_NAME)"
@@ -74,7 +74,7 @@ clean_bitstream:
 clean_simulation:
 	rm -r ./xsim.dir
 	rm -r ./.Xil
-	rm ./$(TOP_MODULE)_snapshot.wdb
+	rm ./$(SIM_MODULE)_snapshot.wdb
 	rm ./*.jou
 	rm ./*.log
 	rm ./*.pb
