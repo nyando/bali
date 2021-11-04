@@ -13,10 +13,15 @@ module uart_to_led(
 
     wire divclock;
     wire done;
-    wire [7:0] byte;
+    wire [7:0] byte_out;
 
     clkdiv divider(clk, divclock);
-    uart_rx receiver(divclock, tx, done, byte);
-    led_mapper mapper(done, byte, led);
+
+    uart_rx receiver(.clk(divclock),
+                     .rx(tx),
+                     .rx_done_out(done),
+                     .data_out(byte_out));
+
+    led_mapper mapper(done, byte_out, led);
 
 endmodule

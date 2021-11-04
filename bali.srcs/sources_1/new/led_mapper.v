@@ -6,7 +6,7 @@ module led_mapper(
     output [7:0] led_out
     );
 
-    reg [7:0] led;
+    logic [7:0] led;
 
     always @ (write_done)
     begin

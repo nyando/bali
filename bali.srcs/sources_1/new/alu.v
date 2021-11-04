@@ -4,8 +4,8 @@ module alu(
     input [31:0] operand_a,
     input [31:0] operand_b,
     input [3:0] op_select,
-    output reg [31:0] result_lo,
-    output reg [31:0] result_hi
+    output logic [31:0] result_lo,
+    output logic [31:0] result_hi
     );
 
     parameter IINC = 4'b0000;

@@ -1,10 +1,10 @@
 `timescale 100ns / 10ns
 
 module uart_rx (
-    input clock,
+    input clk,
     input rx,
     output rx_done_out,
-    output [7:0] byte_out
+    output [7:0] data_out
     );
     
     // assuming 1 MHz clock frequency and 9600 baud/s, modify this as needed
@@ -15,11 +15,11 @@ module uart_rx (
     parameter data  = 3'b10;
     parameter stop  = 3'b11;
 
-    reg rx_done;
-    reg [1:0] state;
-    reg [7:0] clk_count;
-    reg [2:0] data_index;
-    reg [7:0] data_value;
+    logic rx_done;
+    logic [1:0] state;
+    logic [7:0] clk_count;
+    logic [2:0] data_index;
+    logic [7:0] data_value;
 
     /*
      * --- UART RX STATE MACHINE ---
@@ -107,6 +107,6 @@ module uart_rx (
         end
 
     assign rx_done_out = rx_done;
-    assign byte_out    = data_value;
+    assign data_out    = data_value;
 
 endmodule

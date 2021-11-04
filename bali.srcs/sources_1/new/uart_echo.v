@@ -23,7 +23,16 @@ module uart_echo(
     wire [7:0] rx_byte;
 
     clkdiv divider(clk, clock);
-    uart_rx receiver(clock, uart_in, rx_done, rx_byte);
-    uart_tx transmitter(clock, rx_byte, rx_done, uart_out, tx_done);
+
+    uart_rx receiver(.clk(clock),
+                     .rx(uart_in),
+                     .rx_done_out(rx_done),
+                     .data_out(rx_byte));
+
+    uart_tx transmitter(.clk(clock),
+                        .data_in(rx_byte),
+                        .send(rx_done),
+                        .tx_out(uart_out),
+                        .tx_done(tx_done));
 
 endmodule

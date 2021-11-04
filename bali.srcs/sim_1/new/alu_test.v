@@ -3,14 +3,18 @@
 module alu_test();
 
     // inputs: operands and operator
-    reg [31:0] a;
-    reg [31:0] b;
-    reg [3:0] op_select;
+    logic [31:0] a;
+    logic [31:0] b;
+    logic [3:0] op_select;
     // outputs: result
     wire [31:0] result_lo;
     wire [31:0] result_hi;
     
-    alu testunit (a, b, op_select, result_lo, result_hi);
+    alu testunit(.operand_a(a),
+                 .operand_b(b),
+                 .op_select(op_select),
+                 .result_lo(result_lo),
+                 .result_hi(result_hi));
 
     initial begin
         // iinc: ff

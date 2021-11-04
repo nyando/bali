@@ -9,8 +9,8 @@ module clkdiv(
     output divclk
     );
 
-    reg [7:0] counter;
-    reg clk_out;
+    logic [7:0] counter;
+    logic clk_out;
 
     initial begin
         counter <= 1;

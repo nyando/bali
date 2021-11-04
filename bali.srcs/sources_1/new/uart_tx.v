@@ -15,12 +15,12 @@ module uart_tx(
     parameter data  = 2'b10;
     parameter stop  = 2'b11;
 
-    reg [1:0] state;
-    reg [7:0] counter;
-    reg tx_value;
-    reg done;
-    reg [7:0] data_value;
-    reg [2:0] data_index;
+    logic [1:0] state;
+    logic [7:0] counter;
+    logic tx_value;
+    logic done;
+    logic [7:0] data_value;
+    logic [2:0] data_index;
     
     initial begin
         state <= idle;
@@ -93,6 +93,9 @@ module uart_tx(
                 done <= 0;
                 tx_value <= 1;
                 counter <= 0;
+            end
+            default: begin
+                state <= idle;
             end
         endcase
     end
