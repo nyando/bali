@@ -2,13 +2,20 @@
 .vscode/
 
 # generated folders
+.Xil/
 arty-a7-35/
 bali.cache/
 bali.hw/
 bali.ip_user_files/
 bali.runs/
 bali.sim/
+output/
+xsim.dir/
 
-# vivado tcl console files
-vivado*.jou
-vivado*.log
+# vivado tcl console logs and webtalk files
+usage_statistics_webtalk.html
+usage_statistics_webtalk.xml
+*.wdb
+*.jou
+*.log
+*.pb
