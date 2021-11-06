@@ -21,7 +21,7 @@ module alu(
     parameter ISHL = 4'b1010;
     parameter ISHR = 4'b1011;
 
-    always @ (operand_a, operand_b, op_select)
+    always @ (op_select)
         begin
             case (op_select)
                 // iinc: increment integer (unary, use operand_a)
