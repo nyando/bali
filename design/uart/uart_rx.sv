@@ -45,6 +45,7 @@ module uart_rx (
                     clk_count <= 8'h00;
                     data_index <= 3'b000;
                     rx_done <= 0;
+                    data_value <= 8'h00;
                     
                     if (rx == 0)
                         state <= start;
