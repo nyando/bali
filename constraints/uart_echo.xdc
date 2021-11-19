@@ -10,3 +10,4 @@ set_property -dict {PACKAGE_PIN A9 IOSTANDARD LVCMOS33} [get_ports {uart_in}]
 
 # UART transmitter port
 set_property -dict {PACKAGE_PIN D10 IOSTANDARD LVCMOS33} [get_ports {uart_out}]
+# set_property -dict {PACKAGE_PIN V15 IOSTANDARD LVCMOS33} [get_ports {uart_out}] # V15 = IO0 GPIO Port

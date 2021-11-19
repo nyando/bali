@@ -8,12 +8,12 @@ module uart_rx (
     );
     
     // assuming 1 MHz clock frequency and 9600 baud/s, modify this as needed
-    parameter ticks_per_bit = 104; 
+    parameter CYCLES_PER_BIT = 104; 
 
-    parameter idle  = 3'b00;
-    parameter start = 3'b01;
-    parameter data  = 3'b10;
-    parameter stop  = 3'b11;
+    parameter IDLE  = 3'b00;
+    parameter START = 3'b01;
+    parameter DATA  = 3'b10;
+    parameter STOP  = 3'b11;
 
     logic rx_done;
     logic [1:0] state;
@@ -38,71 +38,75 @@ module uart_rx (
      * on rising clock edge and stop state:
      *   - if rx high after ~50 us -> stop bit recognized, move to idle
      */
+    initial begin
+        state <= IDLE;
+        data_value <= 8'h00;
+    end
+
     always @ (posedge clk)
         begin
             case (state)
-                idle: begin
+                IDLE: begin
                     clk_count <= 8'h00;
                     data_index <= 3'b000;
                     rx_done <= 0;
-                    data_value <= 8'h00;
                     
                     if (rx == 0)
-                        state <= start;
+                        state <= START;
                     else
-                        state <= idle;
+                        state <= IDLE;
 
                 end
-                start: begin
-                    if (clk_count == (ticks_per_bit - 1) / 2) begin
+                START: begin
+                    if (clk_count == (CYCLES_PER_BIT - 1) / 2) begin
                         if (rx == 0) begin
                             clk_count <= 8'h00;
-                            state <= data;
+                            state <= DATA;
                         end
                         else
-                            state <= idle;
+                            state <= IDLE;
                     end
                     else 
                         begin
                             clk_count <= clk_count + 1;
-                            state <= start;
+                            state <= START;
                         end
                 end
-                data: begin
-                    if (clk_count > ticks_per_bit - 1) begin
+                DATA: begin
+                    if (clk_count > CYCLES_PER_BIT - 1) begin
                         clk_count <= 8'h00;
                         data_value[data_index] <= rx;
                         
                         if (data_index < 7) begin
                             data_index <= data_index + 1;
-                            state <= data;
+                            state <= DATA;
                         end
                         else
                             begin
                                 data_index <= 3'b000;
-                                state <= stop;
+                                state <= STOP;
                             end
                     end
                     else
                         begin
                             clk_count <= clk_count + 1;
-                            state <= data;
+                            state <= DATA;
                         end
                 end
-                stop: begin
-                    if (clk_count > ticks_per_bit - 1) begin
+                STOP: begin
+                    if (clk_count > CYCLES_PER_BIT - 1) begin
                         clk_count <= 8'h00;
-                        state <= idle;
+                        state <= IDLE;
                         rx_done <= 1;
                     end
                     else
                         begin
                             clk_count <= clk_count + 1;
-                            state <= stop;
+                            state <= STOP;
                         end
                 end
                 default: begin
-                    state <= idle;
+                    state <= IDLE;
                 end
             endcase
         end

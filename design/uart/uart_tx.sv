@@ -8,12 +8,12 @@ module uart_tx(
     output tx_done
     );
 
-    parameter ticks_per_bit = 104;
+    parameter CYCLES_PER_BIT = 104;
 
-    parameter idle  = 2'b00;
-    parameter start = 2'b01;
-    parameter data  = 2'b10;
-    parameter stop  = 2'b11;
+    parameter IDLE  = 2'b00;
+    parameter START = 2'b01;
+    parameter DATA  = 2'b10;
+    parameter STOP  = 2'b11;
 
     logic [1:0] state;
     logic [7:0] counter;
@@ -23,7 +23,7 @@ module uart_tx(
     logic [2:0] data_index;
     
     initial begin
-        state <= idle;
+        state <= IDLE;
         tx_value <= 1;
         counter <= 0;
     end
@@ -31,15 +31,15 @@ module uart_tx(
     always @ (posedge clk)
     begin
         case (state)
-            start: begin
-                if (counter > ticks_per_bit - 1)
+            START: begin
+                if (counter > CYCLES_PER_BIT - 1)
                     begin
-                        state <= data;
+                        state <= DATA;
                         counter <= 0;
                     end
                 else
                     begin
-                        state <= start;
+                        state <= START;
                         tx_value <= 0;
                         counter <= counter + 1;
                         done <= 0;
@@ -47,8 +47,8 @@ module uart_tx(
                         data_index <= 0;
                     end
             end
-            data: begin
-                if (counter > ticks_per_bit - 1)
+            DATA: begin
+                if (counter > CYCLES_PER_BIT - 1)
                     begin
                         if (data_index < 7)
                             begin
@@ -58,7 +58,7 @@ module uart_tx(
                             end
                         else
                             begin
-                                state <= stop;
+                                state <= STOP;
                                 counter <= 0;
                             end
                     end
@@ -68,10 +68,10 @@ module uart_tx(
                         counter <= counter + 1;
                     end
             end
-            stop: begin
-                if (counter > ticks_per_bit - 1)
+            STOP: begin
+                if (counter > CYCLES_PER_BIT - 1)
                     begin
-                        state <= idle;
+                        state <= IDLE;
                         done <= 1;
                         data_index <= 0;
                     end
@@ -81,21 +81,21 @@ module uart_tx(
                         counter <= counter + 1;
                     end
             end
-            idle: begin
+            IDLE: begin
                 if (send == 1)
                     begin
-                        state <= start;
+                        state <= START;
                     end
                 else
                     begin
-                        state <= idle;
+                        state <= IDLE;
                     end
                 done <= 0;
                 tx_value <= 1;
                 counter <= 0;
             end
             default: begin
-                state <= idle;
+                state <= IDLE;
             end
         endcase
     end

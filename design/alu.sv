@@ -37,7 +37,7 @@ module alu(
                     result_lo = operand_a - operand_b;
                 end
                 // imul: multiply two integers
-                IMUL: begin
+                /*IMUL: begin
                     {result_hi, result_lo} = operand_a * operand_b;
                 end
                 // idiv: divide two integers
@@ -47,7 +47,7 @@ module alu(
                 // irem: modulo of two integers
                 IREM: begin
                     result_lo = operand_a % operand_b;
-                end
+                end*/
                 // iand: bitwise AND of two integers
                 IAND: begin
                     result_lo = operand_a & operand_b;
