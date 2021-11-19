@@ -5,6 +5,27 @@
 #  - part_id: ID of FPGA board to program.
 #######################################################################################################################
 
+proc glob-r {{dir .} args} {
+    set res {}
+    foreach i [lsort [glob -nocomplain -dir $dir *]] {
+        if {[file isdirectory $i]} {
+            eval [list lappend res] [eval [linsert $args 0 glob-r $i]]
+        } else {
+            if {[llength $args]} {
+                foreach arg $args {
+                    if {[string match $arg $i]} {
+                        lappend res $i
+                        break
+                    }
+                }
+            } else {
+                lappend res $i
+            }
+        }
+    }
+    return $res
+}
+
 # define output directory
 set output_dir ./output
 set module_name [lindex $argv 0]
@@ -12,7 +33,7 @@ set part_id [lindex $argv 1]
 file mkdir $output_dir
 
 # setup design sources, constraints
-read_verilog -sv [ glob ./design/*.sv ]
+read_verilog -sv [ glob-r ./design *.sv ]
 read_xdc ./constraints/$module_name.xdc
 
 # run synthesis
