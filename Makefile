@@ -9,10 +9,10 @@ ifeq ($(OS), Windows_NT)
 endif
 
 # top-level simulation module (DO NOT USE THIS FOR PROGRAMMING THE FPGA)
-SIM_MODULE := uart_calc
+SIM_MODULE := test_uart
 
 # HW programming parameters (use this for programming the FPGA)
-MODULE_NAME := uart_led
+MODULE_NAME := uart_calc
 BOARD_NAME := xc7a35ticsg324-1L
 DEVICE_NAME := Digilent/210319AB5574A
 
@@ -23,16 +23,16 @@ CONSTRS_DIR := ./constraints
 SCRIPTS_DIR := ./scripts
 
 SV_SOURCES := \
-	$(SRC_DIR)/alu.sv \
 	$(SRC_DIR)/clkdiv.sv \
 	$(SRC_DIR)/uart/uart_rx.sv \
 	$(SRC_DIR)/uart/uart_tx.sv \
+	$(SRC_DIR)/uart/word_echo.sv \
 	$(SRC_DIR)/io/word_rx.sv \
 	$(SRC_DIR)/io/word_tx.sv \
 
 SV_SIMS := \
 	$(SIM_DIR)/sim_clk.sv \
-	$(SIM_DIR)/uart_calc.sv \
+	$(SIM_DIR)/test_uart.sv \
 
 SV_OPTS := \
 	--incr \
