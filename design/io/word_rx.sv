@@ -18,7 +18,7 @@ module word_rx(
         rx_complete <= 0;
     end
 
-    always @ (negedge rx_done or negedge clk) begin
+    always @ (negedge clk) begin
         if (rx_complete) begin
             rx_complete <= 0;
         end
