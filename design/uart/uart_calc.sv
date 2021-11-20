@@ -8,15 +8,12 @@ module uart_calc(
     output [1:0] state
 );
 
-    logic clock;
-    clkdiv clkdivider(clk, clock);
-
     logic uart_rx_done;
     logic [7:0] wordrx_byte_in;
 
     uart_rx #(.CYCLES_PER_BIT(104))
     uart_receiver(
-        .clk(clock),
+        .clk(clk),
         .rx(uart_in),
         .done(uart_rx_done),
         .out(wordrx_byte_in)
@@ -26,7 +23,7 @@ module uart_calc(
     logic [31:0] word_rx_out;
 
     word_rx word_receiver(
-        .clk(clock),
+        .clk(clk),
         .in(wordrx_byte_in),
         .byte_done(uart_rx_done),
         .out(word_rx_out),
@@ -42,7 +39,11 @@ module uart_calc(
     logic [31:0] hi;
     logic op_done;
 
-    always @ (negedge clock) begin
+    initial begin
+        rx_count <= 2'b00;
+    end
+
+    always @ (negedge clk) begin
         if (word_rx_done) begin
             case (rx_count)
                 2'b00: begin
@@ -89,7 +90,7 @@ module uart_calc(
     logic word_send;
     logic word_sent;
     
-    always @ (posedge clock) begin
+    always @ (posedge clk) begin
         if (op_done) begin
             lo_out[31:0] <= lo[31:0];
             word_send <= 1;
@@ -101,7 +102,7 @@ module uart_calc(
     // end UART TX output logic
 
     word_tx result_transmitter(
-        .clk(clock),
+        .clk(clk),
         .in(lo_out),
         .send_in(word_send),
         .sent(byte_sent),
@@ -114,7 +115,7 @@ module uart_calc(
 
     uart_tx #(.CYCLES_PER_BIT(104))
     uart_transmitter(
-        .clk(clock),
+        .clk(clk),
         .in(tx_data_in),
         .send(tx_send),
         .tx(uart_out_wire),
