@@ -4,7 +4,7 @@ module led_mapper(
     input write_done,
     input [7:0] byte_in,
     output [7:0] led_out
-    );
+);
 
     logic [7:0] led;
 

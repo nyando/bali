@@ -28,16 +28,16 @@ module test_uart();
     
     // transmitter module
     uart_tx test_uart_tx(.clk(divclock),
-                         .data_in(byte_in),
+                         .in(byte_in),
                          .send(send),
-                         .tx_out(tx2rx),
-                         .tx_done(tx_done));
+                         .tx(tx2rx),
+                         .done(tx_done));
 
     // receiver module
     uart_rx test_uart_rx(.clk(divclock),
                          .rx(tx2rx),
-                         .rx_done_out(rx_done),
-                         .data_out(byte_out));
+                         .done(rx_done),
+                         .out(byte_out));
 
     initial begin
         byte_in = 8'h99;
@@ -49,7 +49,7 @@ module test_uart();
         #1_000_000
         assert (byte_out == 8'h99) else
             $fatal(1, "Output byte received by UART RX does not match input");
-        $display("Testbench passed, UART ready for production use");
+        $display("Testbench passed, UART ready for use");
         #200;
         $finish;
     end

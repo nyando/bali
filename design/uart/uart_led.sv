@@ -9,7 +9,7 @@ module uart_led(
     input clk,
     input tx,
     output [7:0] led
-    );
+);
 
     wire divclock;
     wire done;
@@ -19,8 +19,8 @@ module uart_led(
 
     uart_rx receiver(.clk(divclock),
                      .rx(tx),
-                     .rx_done_out(done),
-                     .data_out(byte_out));
+                     .done(done),
+                     .out(byte_out));
 
     led_mapper mapper(done, byte_out, led);
 

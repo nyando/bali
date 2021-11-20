@@ -15,7 +15,7 @@ module uart_echo(
     input clk,
     input uart_in,
     output uart_out
-    );
+);
 
     wire clock;
     wire rx_done;
@@ -26,13 +26,13 @@ module uart_echo(
 
     uart_rx receiver(.clk(clock),
                      .rx(uart_in),
-                     .rx_done_out(rx_done),
-                     .data_out(rx_byte));
+                     .done(rx_done),
+                     .out(rx_byte));
 
     uart_tx transmitter(.clk(clock),
-                        .data_in(rx_byte),
+                        .in(rx_byte),
                         .send(rx_done),
-                        .tx_out(uart_out),
-                        .tx_done(tx_done));
+                        .tx(uart_out),
+                        .done(tx_done));
 
 endmodule

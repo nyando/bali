@@ -6,10 +6,12 @@
 * Scale this down as needed.
 */
 module sim_clk(output logic clk);
-initial begin
-    clk = 0;
-    forever begin
-        #5 clk = ~clk;
+
+    initial begin
+        clk = 0;
+        forever begin
+            #5 clk = ~clk;
+        end
     end
-end
+
 endmodule

@@ -16,8 +16,8 @@ module word_echo(
     uart_receiver(
         .clk(clock),
         .rx(uart_in),
-        .rx_done_out(uart_rx_done),
-        .data_out(wordrx_byte_in)
+        .done(uart_rx_done),
+        .out(wordrx_byte_in)
     );
  
     logic word_rx_done;
@@ -25,10 +25,10 @@ module word_echo(
 
     word_rx word_receiver(
         .clk(clock),
-        .byte_in(wordrx_byte_in),
-        .rx_done(uart_rx_done),
-        .word_out(word_rx_out),
-        .word_done(word_rx_done)
+        .in(wordrx_byte_in),
+        .byte_done(uart_rx_done),
+        .out(word_rx_out),
+        .done(word_rx_done)
     );
 
     logic byte_sent;
@@ -38,21 +38,21 @@ module word_echo(
 
     word_tx result_transmitter(
         .clk(clock),
-        .word_in(word_rx_out),
-        .word_send(word_rx_done),
-        .byte_sent(byte_sent),
-        .byte_out(tx_data_in),
-        .uart_send(tx_send),
-        .send_done(word_sent)
+        .in(word_rx_out),
+        .send_in(word_rx_done),
+        .sent(byte_sent),
+        .out(tx_data_in),
+        .send_out(tx_send),
+        .done(word_sent)
     );
 
     uart_tx #(.CYCLES_PER_BIT(104))
     uart_transmitter(
         .clk(clock),
-        .data_in(tx_data_in),
+        .in(tx_data_in),
         .send(tx_send),
-        .tx_out(uart_out),
-        .tx_done(byte_sent)
+        .tx(uart_out),
+        .done(byte_sent)
     );
 
 endmodule

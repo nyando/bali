@@ -2,86 +2,86 @@
 
 module word_tx(
     input clk,
-    input [31:0] word_in,
-    input word_send,
-    input byte_sent,
-    output [7:0] byte_out,
-    output uart_send,
-    output send_done
-    );
+    input [31:0] in,
+    input send_in,
+    input sent,
+    output [7:0] out,
+    output send_out,
+    output done
+);
 
-    parameter IDLE = 2'b00;
-    parameter SEND = 2'b01;
-    parameter DONE = 2'b10;
+    const logic [1:0] IDLE = 2'b00;
+    const logic [1:0] SEND = 2'b01;
+    const logic [1:0] DONE = 2'b10;
 
-    logic [1:0]  state;
-    logic [2:0]  byte_count;
-    logic [7:0]  current_byte;
-    logic [31:0] word_to_send;
-    logic send_byte;
-    logic word_sent;
+    logic [7:0] tx_byte; // set to output "out"; byte to send via uart_tx module
+    logic uart_send;     // set to output "send_out"; trigger uart_tx transmission
+    logic tx_done;       // set to output "done"; set to HI for one clock cycle when word transmitted
+    logic [1:0] state;
+    logic [2:0] count;   // count index of byte to send
+    logic [31:0] word;   // 32 bit word to send via uart_tx
 
     initial begin
         state <= IDLE;
-        send_byte <= 0;
-        word_to_send[31:0] <= 32'h00000000;
-        current_byte[7:0] <= 8'h00;
-        byte_count[2:0] <= 3'b000;
-        word_sent <= 0;
+        uart_send <= 0;
+        word[31:0] <= 32'h00000000;
+        tx_byte[7:0] <= 8'h00;
+        count[2:0] <= 3'b000;
+        tx_done <= 0;
     end
 
     always @ (negedge clk) begin
-        if (send_byte) begin
-            send_byte <= 0;
+        if (uart_send) begin
+            uart_send <= 0;
         end
 
-        if (state == IDLE && word_send) begin
+        if (state == IDLE && send_in) begin
             state <= SEND;
-            byte_count <= 3'b001;
-            word_to_send[31:0] <= word_in[31:0];
-            send_byte <= 1;
+            count <= 3'b001;
+            word[31:0] <= in[31:0];
+            uart_send <= 1;
         end
 
         if (state == DONE) begin
             state <= IDLE;
-            byte_count <= 3'b000;
-            word_sent <= 0;
+            count <= 3'b000;
+            tx_done <= 0;
         end
 
         if (state == SEND) begin
-            case (byte_count)
+            case (count)
                 3'b001: begin
-                    current_byte[7:0] <= word_to_send[7:0];
+                    tx_byte[7:0] <= word[7:0];
                 end
                 3'b010: begin
-                    current_byte[7:0] <= word_to_send[15:8];
+                    tx_byte[7:0] <= word[15:8];
                 end
                 3'b011: begin
-                    current_byte[7:0] <= word_to_send[23:16];
+                    tx_byte[7:0] <= word[23:16];
                 end
                 3'b100: begin
-                    current_byte[7:0] <= word_to_send[31:24];
+                    tx_byte[7:0] <= word[31:24];
                 end
                 default: begin
-                    current_byte <= 8'hXX;
+                    tx_byte <= 8'hXX;
                 end
             endcase
         end
         
-        if (state == SEND && byte_sent) begin
-            if (byte_count == 3'b100) begin
+        if (state == SEND && sent) begin
+            if (count == 3'b100) begin
                 state <= DONE;
-                word_sent <= 1;
+                tx_done <= 1;
             end
             else begin
-                byte_count <= byte_count + 1;
-                send_byte <= 1;
+                count <= count + 1;
+                uart_send <= 1;
             end
         end
     end
 
-    assign uart_send = send_byte;
-    assign byte_out = current_byte;
-    assign send_done = word_sent;
+    assign send_out = uart_send;
+    assign out = tx_byte;
+    assign done = tx_done;
 
 endmodule

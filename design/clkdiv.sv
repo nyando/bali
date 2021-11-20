@@ -1,13 +1,15 @@
 `timescale 100ns / 10ns
 
 /*
- * clkdiv - Clock divider with a factor of 100.
- * TODO: Extend this so that clock scale factor is parametrizable in the module constructor.
+ * clkdiv - Clock divider with parametrizable factor.
+ * Setting CLKDIV_FACTOR to number N will output one clock cycle for every N input clock cycles.
  */
 module clkdiv(
     input clk,
     output divclk
-    );
+);
+
+    parameter CLKDIV_FACTOR = 100;
 
     logic [7:0] counter;
     logic clk_out;
@@ -20,7 +22,7 @@ module clkdiv(
     always @ (posedge clk)
     begin
         counter <= counter + 1;
-        if (counter == 50) begin
+        if (counter == CLKDIV_FACTOR / 2) begin
             counter <= 1;
             clk_out <= ~clk_out;
         end

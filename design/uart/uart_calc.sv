@@ -18,8 +18,8 @@ module uart_calc(
     uart_receiver(
         .clk(clock),
         .rx(uart_in),
-        .rx_done_out(uart_rx_done),
-        .data_out(wordrx_byte_in)
+        .done(uart_rx_done),
+        .out(wordrx_byte_in)
     );
 
     logic word_rx_done;
@@ -27,10 +27,10 @@ module uart_calc(
 
     word_rx word_receiver(
         .clk(clock),
-        .byte_in(wordrx_byte_in),
-        .rx_done(uart_rx_done),
-        .word_out(word_rx_out),
-        .word_done(word_rx_done)
+        .in(wordrx_byte_in),
+        .byte_done(uart_rx_done),
+        .out(word_rx_out),
+        .done(word_rx_done)
     );
 
     // begin calculator logic
@@ -84,7 +84,6 @@ module uart_calc(
     logic byte_sent;
     logic [7:0] tx_data_in;
     logic tx_send;
-    logic tx_out;
 
     logic [31:0] lo_out;
     logic word_send;
@@ -103,12 +102,12 @@ module uart_calc(
 
     word_tx result_transmitter(
         .clk(clock),
-        .word_in(lo_out),
-        .word_send(word_send),
-        .byte_sent(byte_sent),
-        .byte_out(tx_data_in),
-        .uart_send(tx_send),
-        .send_done(word_sent)
+        .in(lo_out),
+        .send_in(word_send),
+        .sent(byte_sent),
+        .out(tx_data_in),
+        .send_out(tx_send),
+        .done(word_sent)
     );
 
     logic uart_out_wire;
@@ -116,10 +115,10 @@ module uart_calc(
     uart_tx #(.CYCLES_PER_BIT(104))
     uart_transmitter(
         .clk(clock),
-        .data_in(tx_data_in),
+        .in(tx_data_in),
         .send(tx_send),
-        .tx_out(uart_out_wire),
-        .tx_done(byte_sent)
+        .tx(uart_out_wire),
+        .done(byte_sent)
     );
 
     assign uart_out = uart_out_wire;

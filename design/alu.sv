@@ -6,20 +6,20 @@ module alu(
     input [3:0] op_select,
     output logic [31:0] result_lo,
     output logic [31:0] result_hi
-    );
+);
 
-    parameter IINC = 4'b0000;
-    parameter IADD = 4'b0001;
-    parameter ISUB = 4'b0010;
-    parameter IMUL = 4'b0011;
-    parameter IDIV = 4'b0100;
-    parameter IREM = 4'b0101;
-    parameter IAND = 4'b0110;
-    parameter IOR  = 4'b0111;
-    parameter IXOR = 4'b1000;
-    parameter INEG = 4'b1001;
-    parameter ISHL = 4'b1010;
-    parameter ISHR = 4'b1011;
+    const logic [3:0] IINC = 4'b0000;
+    const logic [3:0] IADD = 4'b0001;
+    const logic [3:0] ISUB = 4'b0010;
+    const logic [3:0] IMUL = 4'b0011;
+    const logic [3:0] IDIV = 4'b0100;
+    const logic [3:0] IREM = 4'b0101;
+    const logic [3:0] IAND = 4'b0110;
+    const logic [3:0] IOR  = 4'b0111;
+    const logic [3:0] IXOR = 4'b1000;
+    const logic [3:0] INEG = 4'b1001;
+    const logic [3:0] ISHL = 4'b1010;
+    const logic [3:0] ISHR = 4'b1011;
 
     always @ (op_select)
         begin
