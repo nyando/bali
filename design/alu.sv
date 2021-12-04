@@ -8,18 +8,18 @@ module alu(
     output logic [31:0] result_hi
 );
 
-    const logic [3:0] IINC = 4'b0000;
-    const logic [3:0] IADD = 4'b0001;
-    const logic [3:0] ISUB = 4'b0010;
-    const logic [3:0] IMUL = 4'b0011;
-    const logic [3:0] IDIV = 4'b0100;
-    const logic [3:0] IREM = 4'b0101;
-    const logic [3:0] IAND = 4'b0110;
-    const logic [3:0] IOR  = 4'b0111;
-    const logic [3:0] IXOR = 4'b1000;
-    const logic [3:0] INEG = 4'b1001;
-    const logic [3:0] ISHL = 4'b1010;
-    const logic [3:0] ISHR = 4'b1011;
+    const logic [3:0] IADD = 4'b0000;
+    const logic [3:0] ISUB = 4'b0001;
+    const logic [3:0] IMUL = 4'b0010;
+    const logic [3:0] IDIV = 4'b0011;
+    const logic [3:0] IREM = 4'b0100;
+    const logic [3:0] INEG = 4'b0101;
+    const logic [3:0] ISHL = 4'b1100;
+    const logic [3:0] ISHR = 4'b1101;
+    const logic [3:0] IAND = 4'b1111;
+    const logic [3:0] IOR  = 4'b1000;
+    const logic [3:0] IXOR = 4'b1001;
+    const logic [3:0] IINC = 4'b1010;
 
     always @ (op_select)
         begin
