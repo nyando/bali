@@ -142,7 +142,6 @@ module decoder(
                 // NOP
             end
             /* ICONST_N */ 8'h0?: begin
-                // ICONST_n
                 case (opcode[3:0])
                     4'h2: begin
                         // push -1

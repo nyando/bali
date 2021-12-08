@@ -36,6 +36,8 @@ module test_decoder();
                 $fatal(1, "decode to aluop failed");
         end
 
+        $finish;
+
     end
 
 endmodule
