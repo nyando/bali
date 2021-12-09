@@ -1,14 +1,16 @@
-`timescale 100ns / 10ns
+`timescale 10ns / 10ns
 
 module stack(
     input clk,
     input push,
     input trigger,
     input [31:0] write_value,
-    output [31:0] read_value
+    output [31:0] read_value,
+    output done_out
 );
 
     logic [31:0] read;
+    logic done;
 
     logic [15:0] top_of_stack;
     logic [15:0] addr;
@@ -45,7 +47,13 @@ module stack(
         reading <= 0;
     end
 
-    always @ (negedge clk) begin
+    always @ (posedge clk) begin
+        
+        if (state == IDLE) begin
+            writing <= 0;
+            reading <= 0;
+            done <= 0;
+        end
         
         if (trigger) begin
             if (push) begin
@@ -61,11 +69,6 @@ module stack(
             end
         end
 
-        if (state == IDLE) begin
-            writing <= 0;
-            reading <= 0;
-        end
-        
         if (state == WRITE) begin
             case (byte_count)
                 2'b00: begin
@@ -89,6 +92,7 @@ module stack(
                     byte_count <= 2'b00;
                     top_of_stack <= top_of_stack + 4;
                     state <= IDLE;
+                    done <= 1;
                 end
                 default: begin end
             endcase
@@ -136,6 +140,7 @@ module stack(
                         read_phase <= 0;
                         state <= IDLE;
                         top_of_stack <= top_of_stack - 4;
+                        done <= 1;
                     end
                     else begin
                         addr <= top_of_stack - 4;
@@ -147,6 +152,7 @@ module stack(
         end
     end
 
-    assign read_value = read[31:0];
+    assign read_value[31:0] = read[31:0];
+    assign done_out = done;
 
 endmodule

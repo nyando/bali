@@ -9,7 +9,7 @@ ifeq ($(OS), Windows_NT)
 endif
 
 # top-level simulation module (DO NOT USE THIS FOR PROGRAMMING THE FPGA)
-SIM_MODULE := test_uart_calc
+SIM_MODULE := test_stack
 
 # HW programming parameters (use this for programming the FPGA)
 MODULE_NAME := uart_calc
@@ -23,17 +23,12 @@ CONSTRS_DIR := ./constraints
 SCRIPTS_DIR := ./scripts
 
 SV_SOURCES := \
-	$(SRC_DIR)/alu.sv \
-	$(SRC_DIR)/clkdiv.sv \
-	$(SRC_DIR)/uart/uart_rx.sv \
-	$(SRC_DIR)/uart/uart_tx.sv \
-	$(SRC_DIR)/uart/uart_calc.sv \
-	$(SRC_DIR)/io/word_rx.sv \
-	$(SRC_DIR)/io/word_tx.sv \
+	$(SRC_DIR)/control/stack.sv \
+	$(SRC_DIR)/memory/block_ram.sv \
 
 SV_SIMS := \
+	$(SIM_DIR)/test_stack.sv \
 	$(SIM_DIR)/sim_clk.sv \
-	$(SIM_DIR)/test_uart_calc.sv \
 
 SV_OPTS := \
 	--incr \

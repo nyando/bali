@@ -1,4 +1,4 @@
-`timescale 100ns / 10ns
+`timescale 10ns / 10ns
 
 module test_decoder();
 
@@ -6,10 +6,12 @@ module test_decoder();
 
     logic [7:0] opcode;
     wire [3:0] aluop;
+    wire [1:0] argc;
 
     decoder uut_decoder (
         .opcode(opcode),
-        .aluop(aluop)
+        .aluop(aluop),
+        .argc()
     );
 
     initial begin
@@ -35,6 +37,9 @@ module test_decoder();
             assert (aluop == aluop_decode[i]) else
                 $fatal(1, "decode to aluop failed");
         end
+
+        opcode = 8'h02;
+        #10;
 
         $finish;
 

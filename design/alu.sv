@@ -19,15 +19,10 @@ module alu(
     const logic [3:0] IAND = 4'b1111;
     const logic [3:0] IOR  = 4'b1000;
     const logic [3:0] IXOR = 4'b1001;
-    const logic [3:0] IINC = 4'b1010;
 
-    always @ (op_select)
+    always @ (op_select or operand_a or operand_b)
         begin
             case (op_select)
-                // iinc: increment integer (unary, use operand_a)
-                IINC: begin
-                    result_lo = operand_a + 1;
-                end
                 // iadd: add two integers
                 IADD: begin
                     result_lo = operand_a + operand_b;

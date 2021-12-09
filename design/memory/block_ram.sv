@@ -1,4 +1,4 @@
-`timescale 100ns / 10ns
+`timescale 10ns / 10ns
 
 module block_ram #(
     parameter DATA = 8,
@@ -15,7 +15,7 @@ module block_ram #(
     logic [DATA - 1:0] mem [SIZE - 1:0];
     logic [DATA - 1:0] out;
 
-    always @ (posedge clk) begin
+    always @ (edge clk) begin
         if (write_enable) begin
             mem[addr] <= data;
         end
