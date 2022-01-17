@@ -3,9 +3,10 @@
 module decoder(
     input [7:0] opcode,
     output [3:0] aluop,
-    output [1:0] argc,
-    output [1:0] stackargs,
-    output stackwb,
+    output isaluop,
+    output [1:0] argc,       // number of arguments in program code
+    output [1:0] stackargs,  // number of arguments on stack
+    output stackwb,          // 1 if result is written back onto stack (as with ALU ops), 0 otherwise
     output constpush,
     output [31:0] constval
 );
@@ -136,6 +137,7 @@ module decoder(
     const logic [7:0] RETURN  = 8'hb1;
 
     logic [3:0] alu_op;
+    logic is_aluop;
     logic [1:0] arg_c;
     logic [1:0] stack_args;
     logic stack_wb;
@@ -144,6 +146,7 @@ module decoder(
 
     initial begin
         alu_op <= 4'h0;
+        is_aluop <= 0;
         arg_c <= 2'b00;
         stack_args <= 2'b00;
         stack_wb <= 0;
@@ -153,6 +156,7 @@ module decoder(
 
     always @ (opcode) begin
         alu_op <= 4'h0;
+        is_aluop <= 0;
         arg_c <= 2'b00;
         stack_args <= 2'b00;
         stack_wb <= 0;
@@ -351,6 +355,7 @@ module decoder(
             end
             /* IADD, ISUB, IMUL, IDIV */ 8'h6?: begin
                 alu_op <= {opcode[7], opcode[4], opcode[3], opcode[2]};
+                is_aluop <= 1;
                 arg_c <= 2'b00;
                 stack_args <= 2'b10;
                 stack_wb <= 1;
@@ -358,6 +363,7 @@ module decoder(
             INEG: begin
                 // INEG
                 alu_op <= 4'b0101;
+                is_aluop <= 1;
                 stack_args <= 2'b01;
                 stack_wb <= 1;
             end
@@ -368,18 +374,21 @@ module decoder(
                 else begin /* IREM */
                     alu_op <= {opcode[7], opcode[4], opcode[3], opcode[2]};
                 end
+                is_aluop <= 1;
                 arg_c <= 2'b00;
                 stack_args <= 2'b10;
                 stack_wb <= 1;
             end
             IINC: begin
                 // IINC (3 byte)
+                is_aluop <= 1;
                 arg_c <= 2'b10;
                 stack_args <= 2'b00;
                 stack_wb <= 0;
             end
             /* IOR, IXOR */ 8'h8?: begin
                 alu_op <= {opcode[7], opcode[4], opcode[2], opcode[1]};
+                is_aluop <= 1;
                 stack_args <= 2'b10;
                 stack_wb <= 1;
             end
@@ -480,8 +489,11 @@ module decoder(
     end
 
     assign aluop = alu_op;
+    assign isaluop = is_aluop;
     assign argc = arg_c;
     assign stackargs = stack_args;
     assign stackwb = stack_wb;
+    assign constpush = const_push;
+    assign constval = const_val;
 
 endmodule

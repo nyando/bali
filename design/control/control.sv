@@ -2,11 +2,11 @@
 
 module control(
     input clk,
-    input [31:0] op_code
+    input [7:0] op_code
 );
 
-    logic [7:0] opcode;
     logic [3:0] aluop;
+    logic isaluop;
     logic [1:0] argc;
     logic [1:0] stackargs;
     logic stackwb;
@@ -14,8 +14,9 @@ module control(
     logic [31:0] stack_constval;
 
     decoder decoder (
-        .opcode(opcode),
+        .opcode(op_code),
         .aluop(aluop),
+        .isaluop(isaluop),
         .argc(argc),
         .stackargs(stackargs),
         .stackwb(stackwb),
@@ -43,38 +44,51 @@ module control(
     
     logic [31:0] operand_a;
     logic [31:0] operand_b;
+    logic [31:0] result_lo;
     
     alu alu (
         .operand_a(operand_a),
         .operand_b(operand_b),
         .op_select(aluop),
-        .result_lo(stack_write),
+        .result_lo(result_lo),
         .result_hi(result_hi)
     );
 
     logic [1:0] stackarg_counter;
-    logic [1:0] state;
+    logic [2:0] state;
 
     const logic [2:0] IDLE   = 3'b000;
     const logic [2:0] FETCH  = 3'b001;
     const logic [2:0] S_LOAD = 3'b010;
     const logic [2:0] EXEC   = 3'b011;
     const logic [2:0] WRITE  = 3'b100;
+    const logic [2:0] S_PUSH = 3'b101;
+
+    initial begin
+        state <= IDLE;
+        stack_trigger <= 0;
+    end
 
     always @ (posedge clk) begin
         case (state)
             IDLE: begin
-                if (opcode != 0) begin
+                if (op_code != 8'h00) begin
                     state <= FETCH;
                     stackarg_counter <= stackargs;
                 end
+                else begin
+                    state <= IDLE;
+                end
             end
             FETCH: begin
-                state <= STACK_LOAD;
                 if (stack_constpush) begin
-                    if (stack_done) begin
-                        state <= IDLE;
-                    end
+                    state <= EXEC;
+                end
+                if (isaluop) begin
+                    state <= S_LOAD;
+                    stack_push <= 0;
+                    stack_trigger <= 1;
+                    stackarg_counter <= stackarg_counter - 1;
                 end
             end
             S_LOAD: begin
@@ -84,17 +98,20 @@ module control(
                             stackarg_counter <= stackarg_counter - 1;
                         end
                         2'b10: begin
+                            // three arguments to pop from stack
                             stack_push <= 0;
                             stack_trigger <= 1;
                             stackarg_counter <= stackarg_counter - 1;
                         end
                         2'b01: begin
+                            // two arguments to pop from stack
                             operand_b[31:0] <= stack_read[31:0];
                             stack_push <= 0;
                             stack_trigger <= 1;
                             stackarg_counter <= stackarg_counter - 1;
                         end
                         2'b00: begin
+                            // one argument to pop from stack
                             operand_a[31:0] <= stack_read[31:0];
                             state <= EXEC;
                         end
@@ -106,6 +123,13 @@ module control(
                 end
             end
             EXEC: begin
+                if (stack_constpush) begin
+                    stack_write[31:0] <= stack_constval[31:0];
+                end
+                if (isaluop) begin
+                    stack_write[31:0] <= result_lo[31:0];
+                end
+                stack_push <= 1;
                 state <= WRITE;
                 stack_trigger <= 1;
             end

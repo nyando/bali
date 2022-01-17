@@ -6,12 +6,22 @@ module test_decoder();
 
     logic [7:0] opcode;
     wire [3:0] aluop;
+    wire isaluop;
     wire [1:0] argc;
+    wire [1:0] stackargs;
+    wire stackwb;
+    wire constpush;
+    wire [31:0] constval;
 
     decoder uut_decoder (
         .opcode(opcode),
         .aluop(aluop),
-        .argc()
+        .isaluop(isaluop),
+        .argc(argc),
+        .stackargs(stackargs),
+        .stackwb(stackwb),
+        .constpush(constpush),
+        .constval(constval)
     );
 
     initial begin

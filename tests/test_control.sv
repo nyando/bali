@@ -14,8 +14,19 @@ module test_control();
     );
 
     initial begin
-        
-        
+        op_code <= 8'h00;
+        #20;
+        op_code <= 8'h02; // push -1 to stack
+        #8;
+        op_code <= 8'h03; // push 0 to stack
+        #8;
+        op_code <= 8'h04; // push 1 to stack
+        #8;
+        op_code <= 8'h60; // add two topmost stack elements and push result
+        #32;
+        op_code <= 8'h00;
+        #20;
+        $finish;
     end
 
 endmodule
