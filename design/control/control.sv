@@ -5,9 +5,25 @@ module control(
     input [7:0] op_code
 );
 
-    logic [3:0] aluop;
-    logic isaluop;
-    logic [1:0] argc;
+    logic [9:0] pc;
+
+    // class memory area
+    block_ram #(
+        .DATA(8),
+        .SIZE(1024)
+    ) class_area (
+        .clk(clk),
+        .write_enable(),            // read-only memory area
+        .data(),                    // no writing data
+        .addr(pc),
+        .data_out(data_out)
+    );
+
+    // static object area
+
+    logic [3:0] aluop;              // operation code to pass to ALU
+    logic isaluop;                  // 1 if operation uses the ALU, 0 otherwise
+    logic [1:0] argc;               // number of arguments in code
     logic [1:0] stackargs;
     logic stackwb;
     logic stack_constpush;
@@ -27,6 +43,7 @@ module control(
     logic [7:0] arg1;
     logic [7:0] arg2;
 
+    // stack memory area
     logic stack_push;
     logic stack_trigger;
     logic [31:0] stack_read;
@@ -42,9 +59,11 @@ module control(
         .done_out(stack_done)
     );
     
+    // ALU integration
     logic [31:0] operand_a;
     logic [31:0] operand_b;
     logic [31:0] result_lo;
+    logic [31:0] result_hi;
     
     alu alu (
         .operand_a(operand_a),
@@ -62,7 +81,6 @@ module control(
     const logic [2:0] S_LOAD = 3'b010;
     const logic [2:0] EXEC   = 3'b011;
     const logic [2:0] WRITE  = 3'b100;
-    const logic [2:0] S_PUSH = 3'b101;
 
     initial begin
         state <= IDLE;
@@ -105,14 +123,18 @@ module control(
                         end
                         2'b01: begin
                             // two arguments to pop from stack
-                            operand_b[31:0] <= stack_read[31:0];
+                            if (isaluop) begin
+                                operand_b[31:0] <= stack_read[31:0];
+                            end
                             stack_push <= 0;
                             stack_trigger <= 1;
                             stackarg_counter <= stackarg_counter - 1;
                         end
                         2'b00: begin
                             // one argument to pop from stack
-                            operand_a[31:0] <= stack_read[31:0];
+                            if (isaluop) begin
+                                operand_a[31:0] <= stack_read[31:0];
+                            end
                             state <= EXEC;
                         end
                         default: begin end
