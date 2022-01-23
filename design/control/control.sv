@@ -5,12 +5,12 @@ module control(
     input [7:0] op_code
 );
 
-    logic [9:0] pc;
+    logic [7:0] pc;                 // max. 256 simple instructions, expand this as needed
 
     // class memory area
     block_ram #(
         .DATA(8),
-        .SIZE(1024)
+        .SIZE(256)
     ) class_area (
         .clk(clk),
         .write_enable(),            // read-only memory area
@@ -50,7 +50,7 @@ module control(
     logic [31:0] stack_write;
     logic stack_done;
 
-    stack stack (
+    stack8 stack8 (
         .clk(clk),
         .push(stack_push),
         .trigger(stack_trigger),
@@ -85,6 +85,7 @@ module control(
     initial begin
         state <= IDLE;
         stack_trigger <= 0;
+        pc <= 8'h00;
     end
 
     always @ (posedge clk) begin
@@ -159,6 +160,7 @@ module control(
                 if (stackwb) begin
                     if (stack_done) begin
                         state <= IDLE;
+                        pc <= pc + 1;
                     end
                     else begin
                         stack_trigger <= 0;

@@ -1,6 +1,6 @@
 `timescale 10ns / 10ns
 
-module stack(
+module stack8(
     input clk,
     input push,
     input trigger,
