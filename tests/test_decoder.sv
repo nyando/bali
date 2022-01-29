@@ -7,6 +7,8 @@ module test_decoder();
     logic [7:0] opcode;
     wire [3:0] aluop;
     wire isaluop;
+    wire iscmp;
+    wire [3:0] cmptype;
     wire [1:0] argc;
     wire [1:0] stackargs;
     wire stackwb;
@@ -17,6 +19,8 @@ module test_decoder();
         .opcode(opcode),
         .aluop(aluop),
         .isaluop(isaluop),
+        .iscmp(iscmp),
+        .cmptype(cmptype),
         .argc(argc),
         .stackargs(stackargs),
         .stackwb(stackwb),

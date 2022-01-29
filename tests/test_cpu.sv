@@ -21,7 +21,7 @@ module test_cpu();
     // cpu outputs new program counter after executing
     logic [7:0] pc;
 
-    cpu cpu_under_test (
+    cpu uut_cpu (
         .clk(clk),
         .op_code(opcode),
         .arg1(arg1),

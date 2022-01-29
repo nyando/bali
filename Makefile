@@ -23,15 +23,15 @@ CONSTRS_DIR := ./constraints
 SCRIPTS_DIR := ./scripts
 
 SV_SOURCES := \
-	$(SRC_DIR)/control/stack32.sv \
 	$(SRC_DIR)/control/control.sv \
 	$(SRC_DIR)/control/decoder.sv \
-	$(SRC_DIR)/cpu.sv \
+	$(SRC_DIR)/control/stack32.sv \
 	$(SRC_DIR)/memory/block_ram.sv \
 	$(SRC_DIR)/alu.sv \
+	$(SRC_DIR)/cpu.sv \
 
 SV_SIMS := \
-	$(SIM_DIR)/test_cpu.sv \
+	$(SIM_DIR)/test_control.sv \
 	$(SIM_DIR)/sim_clk.sv \
 
 SV_OPTS := \
