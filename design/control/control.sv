@@ -3,6 +3,13 @@
 module control(
     input clk,
     input [7:0] op_code,
+    input [7:0] arg1,
+    input [7:0] arg2,
+    input [31:0] stackread,
+    input stackdone,
+    output [31:0] stackwrite,
+    output stackpush,
+    output stacktrigger,
     output [1:0] argcount,
     output op_done
 );
@@ -11,8 +18,8 @@ module control(
 
     logic [3:0] aluop;              // operation code to pass to ALU
     logic isaluop;                  // 1 if operation uses the ALU, 0 otherwise
-    logic [1:0] argc;               // number of arguments in code
-    logic [1:0] stackargs;
+    logic [1:0] argc;               // number of arguments in code (max 2)
+    logic [1:0] stackargs;          // number of elements to pop from stack
     logic stackwb;
     logic stack_constpush;
     logic [31:0] stack_constval;
@@ -28,25 +35,13 @@ module control(
         .constval(stack_constval)
     );
 
-    logic [7:0] arg1;
-    logic [7:0] arg2;
-
-    // stack memory area
+    // stack control
     logic stack_push;
     logic stack_trigger;
     logic [31:0] stack_read;
     logic [31:0] stack_write;
     logic stack_done;
 
-    stack32 stack32 (
-        .clk(clk),
-        .push(stack_push),
-        .trigger(stack_trigger),
-        .write_value(stack_write),
-        .read_value(stack_read),
-        .done_out(stack_done)
-    );
-    
     // ALU integration
     logic [31:0] operand_a;
     logic [31:0] operand_b;
@@ -108,7 +103,7 @@ module control(
                 end
             end
             S_LOAD: begin
-                if (stack_done) begin
+                if (stackdone) begin
                     case (stackarg_counter)
                         2'b11: begin
                             stackarg_counter <= stackarg_counter - 1;
@@ -122,7 +117,7 @@ module control(
                         2'b01: begin
                             // two arguments to pop from stack
                             if (isaluop) begin
-                                operand_b[31:0] <= stack_read[31:0];
+                                operand_b[31:0] <= stackread[31:0];
                             end
                             stack_push <= 0;
                             stack_trigger <= 1;
@@ -131,7 +126,7 @@ module control(
                         2'b00: begin
                             // one argument to pop from stack
                             if (isaluop) begin
-                                operand_a[31:0] <= stack_read[31:0];
+                                operand_a[31:0] <= stackread[31:0];
                             end
                             state <= EXEC;
                         end
@@ -155,7 +150,7 @@ module control(
             end
             WRITE: begin
                 if (stackwb) begin
-                    if (stack_done) begin
+                    if (stackdone) begin
                         state <= IDLE;
                         done <= 1;
                     end
@@ -170,5 +165,8 @@ module control(
 
     assign op_done = done;
     assign argcount = argc;
+    assign stackwrite = stack_write;
+    assign stackpush = stack_push;
+    assign stacktrigger = stack_trigger;
 
 endmodule
