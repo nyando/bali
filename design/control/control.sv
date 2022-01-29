@@ -66,9 +66,10 @@ module control(
 
     const logic [2:0] IDLE   = 3'b000;
     const logic [2:0] FETCH  = 3'b001;
-    const logic [2:0] S_LOAD = 3'b010;
-    const logic [2:0] EXEC   = 3'b011;
-    const logic [2:0] WRITE  = 3'b100;
+    const logic [2:0] DECODE = 3'b010;
+    const logic [2:0] S_LOAD = 3'b011;
+    const logic [2:0] EXEC   = 3'b100;
+    const logic [2:0] WRITE  = 3'b101;
 
     initial begin
         state <= IDLE;
@@ -81,7 +82,6 @@ module control(
                 done <= 0;
                 if (op_code != 8'h00) begin
                     state <= FETCH;
-                    stackarg_counter <= stackargs;
                 end
                 else begin
                     state <= IDLE;
@@ -89,13 +89,22 @@ module control(
             end
             FETCH: begin
                 if (stack_constpush) begin
+                    state <= DECODE;
+                end
+                if (isaluop) begin
+                    state <= DECODE;
+                    stackarg_counter <= stackargs;
+                end
+            end
+            DECODE: begin
+                if (stack_constpush) begin
                     state <= EXEC;
                 end
                 if (isaluop) begin
-                    state <= S_LOAD;
                     stack_push <= 0;
                     stack_trigger <= 1;
                     stackarg_counter <= stackarg_counter - 1;
+                    state <= S_LOAD;
                 end
             end
             S_LOAD: begin
