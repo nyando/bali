@@ -26,6 +26,8 @@ module cpu(
     logic [7:0] pc;
     logic [1:0] argc;
     logic op_done;
+    logic jmp;
+    logic [15:0] jmpaddr;
 
     control control_unit (
         .clk(clk),
@@ -38,6 +40,8 @@ module cpu(
         .stackpush(stackpush),
         .stacktrigger(stacktrigger),
         .argcount(argc),
+        .jmp(jmp),
+        .jmpaddr(jmpaddr),
         .op_done(op_done)
     );
 
@@ -45,9 +49,15 @@ module cpu(
         pc <= 8'h00;
     end
 
-    always @ (negedge clk) begin
+    always @ (posedge clk) begin
         if (op_done) begin
-            pc <= pc + 1 + argc;
+            if (jmp) begin
+                pc[7:0] <= jmpaddr[7:0];
+            end
+            else begin
+                // program counter increases by 1 more than the number of arguments in the bytecode
+                pc <= pc + 1 + argc;
+            end
         end
     end
 

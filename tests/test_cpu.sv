@@ -30,7 +30,7 @@ module test_cpu();
     );
 
     initial begin
-        $readmemh("tests/memory.txt", mem);
+        $readmemh("tests/jumps.txt", mem);
         opcode <= 8'h00;
         #100;
         $finish(0, "test done");

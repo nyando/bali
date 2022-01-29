@@ -1,3 +1,5 @@
+`include "headers/comp_types.vh"
+
 `timescale 10ns / 10ns
 
 module control(
@@ -11,13 +13,17 @@ module control(
     output stackpush,
     output stacktrigger,
     output [1:0] argcount,
+    output jmp,
+    output [15:0] jmpaddr,
     output op_done
 );
 
-    logic done;
+    logic done;                     // set to HI for 1 clock cycle when fetch-execute cycle is completed
 
     logic [3:0] aluop;              // operation code to pass to ALU
     logic isaluop;                  // 1 if operation uses the ALU, 0 otherwise
+    logic iscmp;
+    logic [3:0] cmptype;
     logic [1:0] argc;               // number of arguments in code (max 2)
     logic [1:0] stackargs;          // number of elements to pop from stack
     logic stackwb;
@@ -28,6 +34,8 @@ module control(
         .opcode(op_code),
         .aluop(aluop),
         .isaluop(isaluop),
+        .iscmp(iscmp),
+        .cmptype(cmptype),
         .argc(argc),
         .stackargs(stackargs),
         .stackwb(stackwb),
@@ -56,15 +64,22 @@ module control(
         .result_hi(result_hi)
     );
 
+    // number of arguments to pop from the stack
     logic [1:0] stackarg_counter;
-    logic [2:0] state;
 
+    // internal state of the control module
+    logic [2:0] state;
     const logic [2:0] IDLE   = 3'b000;
     const logic [2:0] FETCH  = 3'b001;
     const logic [2:0] DECODE = 3'b010;
     const logic [2:0] S_LOAD = 3'b011;
-    const logic [2:0] EXEC   = 3'b100;
-    const logic [2:0] WRITE  = 3'b101;
+    const logic [2:0] COMP   = 3'b100;
+    const logic [2:0] EXEC   = 3'b101;
+    const logic [2:0] WRITE  = 3'b110;
+
+    // jump ops
+    logic [15:0] addr;
+    logic jump;
 
     initial begin
         state <= IDLE;
@@ -75,6 +90,7 @@ module control(
         case (state)
             IDLE: begin
                 done <= 0;
+                jump <= 0;
                 if (op_code != 8'h00) begin
                     state <= FETCH;
                 end
@@ -86,7 +102,7 @@ module control(
                 if (stack_constpush) begin
                     state <= DECODE;
                 end
-                if (isaluop) begin
+                if (isaluop || iscmp) begin
                     state <= DECODE;
                     stackarg_counter <= stackargs;
                 end
@@ -95,7 +111,7 @@ module control(
                 if (stack_constpush) begin
                     state <= EXEC;
                 end
-                if (isaluop) begin
+                if (isaluop || iscmp) begin
                     stack_push <= 0;
                     stack_trigger <= 1;
                     stackarg_counter <= stackarg_counter - 1;
@@ -116,7 +132,7 @@ module control(
                         end
                         2'b01: begin
                             // two arguments to pop from stack
-                            if (isaluop) begin
+                            if (isaluop || iscmp) begin
                                 operand_b[31:0] <= stackread[31:0];
                             end
                             stack_push <= 0;
@@ -125,10 +141,15 @@ module control(
                         end
                         2'b00: begin
                             // one argument to pop from stack
-                            if (isaluop) begin
+                            if (isaluop || iscmp) begin
                                 operand_a[31:0] <= stackread[31:0];
                             end
-                            state <= EXEC;
+                            if (iscmp) begin
+                                state <= COMP;
+                            end
+                            else begin
+                                state <= EXEC;
+                            end
                         end
                         default: begin end
                     endcase
@@ -137,6 +158,33 @@ module control(
                     stack_trigger <= 0;
                 end
             end
+            COMP: begin // comparison operation
+                // jump to this address if comparison is true
+                addr <= (arg1 << 8) | arg2;
+                // int32 comparison, two stack arguments
+                case (cmptype[2:0])
+                    EQ: begin
+                        jump <= operand_a == (cmptype[3] ? operand_b : 32'h0000_0000);
+                    end
+                    NE: begin
+                        jump <= operand_a != (cmptype[3] ? operand_b : 32'h0000_0000);
+                    end
+                    LT: begin
+                        jump <= operand_a < (cmptype[3] ? operand_b : 32'h0000_0000);
+                    end
+                    LE: begin
+                        jump <= operand_a <= (cmptype[3] ? operand_b : 32'h0000_0000);
+                    end
+                    GE: begin
+                        jump <= operand_a >= (cmptype[3] ? operand_b : 32'h0000_0000);
+                    end
+                    GT: begin
+                        jump <= operand_a > (cmptype[3] ? operand_b : 32'h0000_0000);
+                    end
+                    default: begin end
+                endcase
+                state <= EXEC;
+            end
             EXEC: begin
                 if (stack_constpush) begin
                     stack_write[31:0] <= stack_constval[31:0];
@@ -144,9 +192,15 @@ module control(
                 if (isaluop) begin
                     stack_write[31:0] <= result_lo[31:0];
                 end
-                stack_push <= 1;
-                state <= WRITE;
-                stack_trigger <= 1;
+                if (stackwb) begin
+                    stack_push <= 1;
+                    state <= WRITE;
+                    stack_trigger <= 1;
+                end
+                else begin
+                    state <= IDLE;
+                    done <= 1;
+                end
             end
             WRITE: begin
                 if (stackwb) begin
@@ -168,5 +222,7 @@ module control(
     assign stackwrite = stack_write;
     assign stackpush = stack_push;
     assign stacktrigger = stack_trigger;
+    assign jmp = jump;
+    assign jmpaddr = addr;
 
 endmodule
