@@ -2,24 +2,12 @@
 
 module control(
     input clk,
-    input [7:0] op_code
+    input [7:0] op_code,
+    output [1:0] argcount,
+    output op_done
 );
 
-    logic [7:0] pc;                 // max. 256 simple instructions, expand this as needed
-
-    // class memory area
-    block_ram #(
-        .DATA(8),
-        .SIZE(256)
-    ) class_area (
-        .clk(clk),
-        .write_enable(),            // read-only memory area
-        .data(),                    // no writing data
-        .addr(pc),
-        .data_out(data_out)
-    );
-
-    // static object area
+    logic done;
 
     logic [3:0] aluop;              // operation code to pass to ALU
     logic isaluop;                  // 1 if operation uses the ALU, 0 otherwise
@@ -50,7 +38,7 @@ module control(
     logic [31:0] stack_write;
     logic stack_done;
 
-    stack8 stack8 (
+    stack32 stack32 (
         .clk(clk),
         .push(stack_push),
         .trigger(stack_trigger),
@@ -85,12 +73,12 @@ module control(
     initial begin
         state <= IDLE;
         stack_trigger <= 0;
-        pc <= 8'h00;
     end
 
     always @ (posedge clk) begin
         case (state)
             IDLE: begin
+                done <= 0;
                 if (op_code != 8'h00) begin
                     state <= FETCH;
                     stackarg_counter <= stackargs;
@@ -160,7 +148,7 @@ module control(
                 if (stackwb) begin
                     if (stack_done) begin
                         state <= IDLE;
-                        pc <= pc + 1;
+                        done <= 1;
                     end
                     else begin
                         stack_trigger <= 0;
@@ -170,5 +158,8 @@ module control(
             default: begin end
         endcase
     end
+
+    assign op_done = done;
+    assign argcount = argc;
 
 endmodule

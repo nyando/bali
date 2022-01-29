@@ -7,23 +7,32 @@ module test_control();
     );
 
     logic [7:0] op_code;
+    logic [1:0] argcount;
+    logic opdone;
+
+    logic [7:0] progmem [31:0];
+    logic [7:0] pc;
 
     control ctrl (
         .clk(clk),
-        .op_code(op_code)
+        .op_code(op_code),
+        .argcount(argcount),
+        .op_done(opdone)
     );
 
     initial begin
         op_code <= 8'h00;
         #20;
         op_code <= 8'h02; // push -1 to stack
-        #8;
-        op_code <= 8'h03; // push 0 to stack
-        #8;
-        op_code <= 8'h04; // push 1 to stack
-        #8;
+        #6;
+        op_code <= 8'h05; // push 2 to stack
+        #6;
+        op_code <= 8'h05; // push 2 to stack
+        #6;
         op_code <= 8'h60; // add two topmost stack elements and push result
-        #32;
+        #12;
+        op_code <= 8'h60;
+        #12;
         op_code <= 8'h00;
         #20;
         $finish;
