@@ -19,7 +19,7 @@ module test_cpu();
     logic [7:0] arg2;
     
     // cpu outputs new program counter after executing
-    logic [7:0] pc;
+    logic [15:0] pc;
 
     cpu uut_cpu (
         .clk(clk),
@@ -30,7 +30,7 @@ module test_cpu();
     );
 
     initial begin
-        $readmemh("tests/progs/push_and_alu.txt", mem);
+        $readmemh("tests/progs/alu_addition.mem", mem);
         opcode <= 8'h00;
         #200;
         $finish(0, "test done");
