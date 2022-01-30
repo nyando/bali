@@ -10,25 +10,25 @@ module decoder(
     output iscmp,
     output [3:0] cmptype,
     output isargpush,
+    output isconstpush,
+    output [31:0] constval,
     output isgoto,
     output [1:0] argc,       // number of arguments in program code
     output [1:0] stackargs,  // number of arguments on stack
-    output stackwb,          // 1 if result is written back onto stack (as with ALU ops), 0 otherwise
-    output constpush,
-    output [31:0] constval
+    output stackwb           // 1 if result is written back onto stack (as with ALU ops), 0 otherwise
 );
 
     logic [3:0] alu_op;
     logic is_aluop;
     logic is_cmp;
     logic [3:0] cmp_type;
+    logic is_constpush;
+    logic [31:0] const_val;
     logic is_argpush;
     logic is_goto;
     logic [1:0] arg_c;
     logic [1:0] stack_args;
     logic stack_wb;
-    logic const_push;
-    logic [31:0] const_val;
 
     initial begin
         alu_op <= 4'h0;
@@ -40,7 +40,7 @@ module decoder(
         arg_c <= 2'b00;
         stack_args <= 2'b00;
         stack_wb <= 0;
-        const_push <= 0;
+        is_constpush <= 0;
         const_val <= 32'h0000_0000;
     end
 
@@ -55,7 +55,7 @@ module decoder(
         arg_c <= 2'b00;
         stack_args <= 2'b00;
         stack_wb <= 0;
-        const_push <= 0;
+        is_constpush <= 0;
         const_val <= 32'h0000_0000;
 
         casez (opcode)
@@ -100,7 +100,7 @@ module decoder(
                 arg_c <= 2'b00;
                 stack_args <= 2'b00;
                 stack_wb <= 1;
-                const_push <= 1;
+                is_constpush <= 1;
             end
             SIPUSH: begin
                 // SIPUSH (3 byte)
@@ -420,7 +420,7 @@ module decoder(
     assign argc = arg_c;
     assign stackargs = stack_args;
     assign stackwb = stack_wb;
-    assign constpush = const_push;
+    assign isconstpush = is_constpush;
     assign constval = const_val;
 
 endmodule

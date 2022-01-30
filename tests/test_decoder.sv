@@ -28,7 +28,7 @@ module test_decoder();
         .argc(argc),
         .stackargs(stackargs),
         .stackwb(stackwb),
-        .constpush(constpush),
+        .isconstpush(constpush),
         .constval(constval)
     );
 

@@ -30,7 +30,7 @@ module test_cpu();
     );
 
     initial begin
-        $readmemh("tests/progs/alu_addition.mem", mem);
+        $readmemh("tests/progs/push_and_alu.mem", mem);
         opcode <= 8'h00;
         #200;
         $finish(0, "test done");

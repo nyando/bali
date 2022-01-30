@@ -18,17 +18,18 @@ module control(
 
     logic done;                     // set to HI for 1 clock cycle when fetch-execute cycle is completed
 
+    // decoder output declaration
     logic [3:0] aluop;              // operation code to pass to ALU
-    logic isaluop;                  // 1 if operation uses the ALU, 0 otherwise
-    logic iscmp;
-    logic [3:0] cmptype;
-    logic isargpush;
-    logic isgoto;
+    logic isaluop;                  // operation uses the ALU
+    logic iscmp;                    // operation is a conditional jump
+    logic [3:0] cmptype;            // differentiates EQ/NE/LT/LE/GE/GT
+    logic isconstpush;              // operation pushes constant to stack
+    logic [31:0] constval;          // value of constant to push to stack
+    logic isargpush;                // operation pushes byte or short literal to stack
+    logic isgoto;                   // operation is unconditional jump
     logic [1:0] argc;               // number of arguments in code (max 2)
     logic [1:0] stackargs;          // number of elements to pop from stack
-    logic stackwb;
-    logic stack_constpush;
-    logic [31:0] stack_constval;
+    logic stackwb;                  // operation writes to stack
 
     decoder decoder (
         .opcode(op_code),
@@ -36,13 +37,13 @@ module control(
         .isaluop(isaluop),
         .iscmp(iscmp),
         .cmptype(cmptype),
+        .isconstpush(isconstpush),
+        .constval(constval),
         .isargpush(isargpush),
         .isgoto(isgoto),
         .argc(argc),
         .stackargs(stackargs),
-        .stackwb(stackwb),
-        .constpush(stack_constpush),
-        .constval(stack_constval)
+        .stackwb(stackwb)
     );
 
     // stack control
@@ -101,7 +102,7 @@ module control(
                 end
             end
             FETCH: begin
-                if (stack_constpush || isargpush || isgoto) begin
+                if (isconstpush || isargpush || isgoto) begin
                     state <= DECODE;
                 end
                 if (isaluop || iscmp) begin
@@ -110,7 +111,7 @@ module control(
                 end
             end
             DECODE: begin
-                if (stack_constpush || isargpush || isgoto) begin
+                if (isconstpush || isargpush || isgoto) begin
                     state <= EXEC;
                 end
                 if (isaluop || iscmp) begin
@@ -165,7 +166,7 @@ module control(
                 end
             end
             COMP: begin // comparison operation
-                // int32 comparison, two stack arguments
+                // if cmptype[3] is set, operation is ICMP, otherwise compare with zero
                 case (cmptype[2:0])
                     EQ: begin
                         jump <= operand_a == (cmptype[3] ? operand_b : 32'h0000_0000);
@@ -191,8 +192,8 @@ module control(
             end
             EXEC: begin
                 // push constant to stack
-                if (stack_constpush) begin
-                    stack_write[31:0] <= stack_constval[31:0];
+                if (isconstpush) begin
+                    stack_write[31:0] <= constval[31:0];
                 end
                 // write alu operation result to stack
                 if (isaluop) begin
@@ -200,25 +201,12 @@ module control(
                 end
                 // push byte or short literal to stack
                 if (isargpush) begin
+                    // sign extend literal to 32 bit length
                     if (argc == 2'b01) begin
-                        stack_write[7:0] = arg1;
-                        // sign extension
-                        if (arg1[7]) begin
-                            stack_write[31:8] = 24'hffff_ff;
-                        end
-                        else begin
-                            stack_write[31:8] = 24'h0000_00;
-                        end
+                        stack_write[31:0] <= { { 24 { arg1[7] } }, arg1[7:0] };
                     end
                     else if (argc == 2'b10) begin
-                        stack_write[15:0] = {arg1, arg2};
-                        // sign extension
-                        if (arg1[7]) begin
-                            stack_write[31:16] = 16'hffff;
-                        end
-                        else begin
-                            stack_write[31:16] = 16'h0000;
-                        end
+                        stack_write[31:0] <= { { 16 { arg1[7] } }, arg1[7:0], arg2[7:0] };
                     end
                 end
                 // write value to stack if stackwb bit is set
@@ -246,11 +234,13 @@ module control(
             default: begin end
         endcase
 
+        // when jumping, set next instruction to offset in code
+        // otherwise, next instruction is (number of args of current opcode + 1)
         if (jump) begin
             pc_offset <= {arg1, arg2};
         end
         else begin
-            pc_offset <= 1 + argc;
+            pc_offset <= argc + 1;
         end
     end
 
