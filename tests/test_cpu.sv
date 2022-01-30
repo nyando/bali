@@ -30,9 +30,9 @@ module test_cpu();
     );
 
     initial begin
-        $readmemh("tests/pushl.txt", mem);
+        $readmemh("tests/mem_programs/push_and_alu.txt", mem);
         opcode <= 8'h00;
-        #100;
+        #200;
         $finish(0, "test done");
     end
 
