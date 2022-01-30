@@ -5,7 +5,7 @@ module cpu(
     input [7:0] op_code,
     input [7:0] arg1,
     input [7:0] arg2,
-    output [7:0] program_counter
+    output [15:0] program_counter
 );
 
     logic stackpush;
@@ -23,11 +23,9 @@ module cpu(
         .done_out(stackdone)
     );
 
-    logic [7:0] pc;
-    logic [1:0] argc;
+    logic [15:0] pc;
     logic op_done;
-    logic jmp;
-    logic [15:0] jmpaddr;
+    logic [15:0] offset;
 
     control control_unit (
         .clk(clk),
@@ -39,9 +37,7 @@ module cpu(
         .stackwrite(stackwrite),
         .stackpush(stackpush),
         .stacktrigger(stacktrigger),
-        .argcount(argc),
-        .jmp(jmp),
-        .jmpaddr(jmpaddr),
+        .offset(offset),
         .op_done(op_done)
     );
 
@@ -51,13 +47,8 @@ module cpu(
 
     always @ (posedge clk) begin
         if (op_done) begin
-            if (jmp) begin
-                pc[7:0] <= jmpaddr[7:0];
-            end
-            else begin
-                // program counter increases by 1 more than the number of arguments in the bytecode
-                pc <= pc + 1 + argc;
-            end
+            // increase program counter by offset
+            pc <= pc + offset;
         end
     end
 

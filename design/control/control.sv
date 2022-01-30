@@ -12,9 +12,7 @@ module control(
     output [31:0] stackwrite,
     output stackpush,
     output stacktrigger,
-    output [1:0] argcount,
-    output jmp,
-    output [15:0] jmpaddr,
+    output [15:0] offset,
     output op_done
 );
 
@@ -25,6 +23,7 @@ module control(
     logic iscmp;
     logic [3:0] cmptype;
     logic isargpush;
+    logic isgoto;
     logic [1:0] argc;               // number of arguments in code (max 2)
     logic [1:0] stackargs;          // number of elements to pop from stack
     logic stackwb;
@@ -38,6 +37,7 @@ module control(
         .iscmp(iscmp),
         .cmptype(cmptype),
         .isargpush(isargpush),
+        .isgoto(isgoto),
         .argc(argc),
         .stackargs(stackargs),
         .stackwb(stackwb),
@@ -80,7 +80,7 @@ module control(
     const logic [2:0] WRITE  = 3'b110;
 
     // jump ops
-    logic [15:0] addr;
+    logic [15:0] pc_offset;
     logic jump;
 
     initial begin
@@ -101,7 +101,7 @@ module control(
                 end
             end
             FETCH: begin
-                if (stack_constpush || isargpush) begin
+                if (stack_constpush || isargpush || isgoto) begin
                     state <= DECODE;
                 end
                 if (isaluop || iscmp) begin
@@ -110,7 +110,7 @@ module control(
                 end
             end
             DECODE: begin
-                if (stack_constpush || isargpush) begin
+                if (stack_constpush || isargpush || isgoto) begin
                     state <= EXEC;
                 end
                 if (isaluop || iscmp) begin
@@ -118,6 +118,10 @@ module control(
                     stack_trigger <= 1;
                     stackarg_counter <= stackarg_counter - 1;
                     state <= S_LOAD;
+                end
+                // unconditional jump
+                if (isgoto) begin
+                    jump <= 1;
                 end
             end
             S_LOAD: begin
@@ -161,8 +165,6 @@ module control(
                 end
             end
             COMP: begin // comparison operation
-                // jump to this address if comparison is true
-                addr <= {arg1, arg2};
                 // int32 comparison, two stack arguments
                 case (cmptype[2:0])
                     EQ: begin
@@ -188,12 +190,15 @@ module control(
                 state <= EXEC;
             end
             EXEC: begin
+                // push constant to stack
                 if (stack_constpush) begin
                     stack_write[31:0] <= stack_constval[31:0];
                 end
+                // write alu operation result to stack
                 if (isaluop) begin
                     stack_write[31:0] <= result_lo[31:0];
                 end
+                // push byte or short literal to stack
                 if (isargpush) begin
                     if (argc == 2'b01) begin
                         stack_write[7:0] = arg1;
@@ -240,14 +245,19 @@ module control(
             end
             default: begin end
         endcase
+
+        if (jump) begin
+            pc_offset <= {arg1, arg2};
+        end
+        else begin
+            pc_offset <= 1 + argc;
+        end
     end
 
     assign op_done = done;
-    assign argcount = argc;
     assign stackwrite = stack_write;
     assign stackpush = stack_push;
     assign stacktrigger = stack_trigger;
-    assign jmp = jump;
-    assign jmpaddr = addr;
+    assign offset = pc_offset;
 
 endmodule

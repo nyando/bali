@@ -10,6 +10,7 @@ module decoder(
     output iscmp,
     output [3:0] cmptype,
     output isargpush,
+    output isgoto,
     output [1:0] argc,       // number of arguments in program code
     output [1:0] stackargs,  // number of arguments on stack
     output stackwb,          // 1 if result is written back onto stack (as with ALU ops), 0 otherwise
@@ -22,6 +23,7 @@ module decoder(
     logic is_cmp;
     logic [3:0] cmp_type;
     logic is_argpush;
+    logic is_goto;
     logic [1:0] arg_c;
     logic [1:0] stack_args;
     logic stack_wb;
@@ -34,6 +36,7 @@ module decoder(
         is_cmp <= 0;
         cmp_type <= 0;
         is_argpush <= 0;
+        is_goto <= 0;
         arg_c <= 2'b00;
         stack_args <= 2'b00;
         stack_wb <= 0;
@@ -48,6 +51,7 @@ module decoder(
         is_cmp <= 0;
         cmp_type <= 0;
         is_argpush <= 0;
+        is_goto <= 0;
         arg_c <= 2'b00;
         stack_args <= 2'b00;
         stack_wb <= 0;
@@ -290,6 +294,7 @@ module decoder(
                 arg_c <= 2'b10;
                 stack_args <= 2'b00;
                 stack_wb <= 0;
+                is_goto <= 1;
             end
             IRETURN: begin
                 // IRETURN
@@ -411,6 +416,7 @@ module decoder(
     assign iscmp = is_cmp;
     assign cmptype = cmp_type;
     assign isargpush = is_argpush;
+    assign isgoto = is_goto;
     assign argc = arg_c;
     assign stackargs = stack_args;
     assign stackwb = stack_wb;

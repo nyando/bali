@@ -14,11 +14,8 @@ module test_control();
     logic [31:0] stackwrite;
     logic stackpush;
     logic stacktrigger;
-    logic [1:0] argcount;
-    logic jmp;
-    logic [15:0] jmpaddr;
+    logic [15:0] offset;
     logic opdone;
-    logic [7:0] pc;
 
     stack32 uut_stack32 (
         .clk(clk),
@@ -39,9 +36,7 @@ module test_control();
         .stackwrite(stackwrite),
         .stackpush(stackpush),
         .stacktrigger(stacktrigger),
-        .argcount(argcount),
-        .jmp(jmp),
-        .jmpaddr(jmpaddr),
+        .offset(offset),
         .op_done(opdone)
     );
 
