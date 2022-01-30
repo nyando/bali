@@ -1,0 +1,16 @@
+// push_and_alu.mem
+// Test byte and short literal push operations.
+11 ba 00    //  0: sipush 0xba00
+11 00 be    //  3: sipush 0x00be
+60          //  6: iadd
+11 ca 00    //  7: sipush 0xca00
+11 00 fe    // 10: sipush 0x00fe
+60          // 13: iadd
+10 10       // 14: bipush 0x10
+78          // 16: ishl
+10 ff       // 17: bipush 0xff
+10 10       // 19: bipush 0x10
+7a          // 21: ishr
+60          // 22: iadd
+7e          // 23: iand -> value on top of stack: 0xcafebabe
+a7 ff e8    // 24: goto 0xffe8 (-24 -> 0)

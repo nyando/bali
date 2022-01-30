@@ -1,0 +1,11 @@
+// jumps.mem
+// Test conditional branching with one and two arguments.
+06          //  0: iconst_3
+05          //  1: iconst_2
+60          //  2: iadd
+08          //  3: iconst_5
+9f 00 03    //  4: if_icmpeq 0x00_03 (+3 -> 7)
+02          //  7: iconst_m1
+04          //  8: iconst_1
+60          //  9: iadd
+99 ff f6    // 10: ifeq 0xff_f6 (-10 -> 0)

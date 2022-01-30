@@ -1,0 +1,8 @@
+// alu_addition.mem
+// Test constant load operations and ALU addition operation.
+02          // 0: iconst_m1
+05          // 1: iconst_2    
+05          // 2: iconst_2
+60          // 3: iadd
+60          // 4: iadd
+a7 ff fb    // 5: goto 0xff_fb (-5 -> 0)
