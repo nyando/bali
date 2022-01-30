@@ -9,6 +9,7 @@ module decoder(
     output isaluop,
     output iscmp,
     output [3:0] cmptype,
+    output isargpush,
     output [1:0] argc,       // number of arguments in program code
     output [1:0] stackargs,  // number of arguments on stack
     output stackwb,          // 1 if result is written back onto stack (as with ALU ops), 0 otherwise
@@ -20,6 +21,7 @@ module decoder(
     logic is_aluop;
     logic is_cmp;
     logic [3:0] cmp_type;
+    logic is_argpush;
     logic [1:0] arg_c;
     logic [1:0] stack_args;
     logic stack_wb;
@@ -29,6 +31,9 @@ module decoder(
     initial begin
         alu_op <= 4'h0;
         is_aluop <= 0;
+        is_cmp <= 0;
+        cmp_type <= 0;
+        is_argpush <= 0;
         arg_c <= 2'b00;
         stack_args <= 2'b00;
         stack_wb <= 0;
@@ -37,9 +42,12 @@ module decoder(
     end
 
     always @ (opcode) begin
+        // initialize default values for each output
         alu_op <= 4'h0;
         is_aluop <= 0;
         is_cmp <= 0;
+        cmp_type <= 0;
+        is_argpush <= 0;
         arg_c <= 2'b00;
         stack_args <= 2'b00;
         stack_wb <= 0;
@@ -95,12 +103,14 @@ module decoder(
                 arg_c <= 2'b10;
                 stack_args <= 2'b00;
                 stack_wb <= 1;
+                is_argpush <= 1;
             end
             BIPUSH: begin
                 // BIPUSH (2 byte)
                 arg_c <= 2'b01;
                 stack_args <= 2'b00;
                 stack_wb <= 1;
+                is_argpush <= 1;
             end
             LDC: begin
                 // LDC (2 byte)
@@ -400,6 +410,7 @@ module decoder(
     assign isaluop = is_aluop;
     assign iscmp = is_cmp;
     assign cmptype = cmp_type;
+    assign isargpush = is_argpush;
     assign argc = arg_c;
     assign stackargs = stack_args;
     assign stackwb = stack_wb;

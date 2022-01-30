@@ -31,7 +31,7 @@ SV_SOURCES := \
 	$(SRC_DIR)/cpu.sv \
 
 SV_SIMS := \
-	$(SIM_DIR)/test_control.sv \
+	$(SIM_DIR)/test_cpu.sv \
 	$(SIM_DIR)/sim_clk.sv \
 
 SV_OPTS := \

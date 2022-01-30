@@ -24,6 +24,7 @@ module control(
     logic isaluop;                  // 1 if operation uses the ALU, 0 otherwise
     logic iscmp;
     logic [3:0] cmptype;
+    logic isargpush;
     logic [1:0] argc;               // number of arguments in code (max 2)
     logic [1:0] stackargs;          // number of elements to pop from stack
     logic stackwb;
@@ -36,6 +37,7 @@ module control(
         .isaluop(isaluop),
         .iscmp(iscmp),
         .cmptype(cmptype),
+        .isargpush(isargpush),
         .argc(argc),
         .stackargs(stackargs),
         .stackwb(stackwb),
@@ -99,7 +101,7 @@ module control(
                 end
             end
             FETCH: begin
-                if (stack_constpush) begin
+                if (stack_constpush || isargpush) begin
                     state <= DECODE;
                 end
                 if (isaluop || iscmp) begin
@@ -108,7 +110,7 @@ module control(
                 end
             end
             DECODE: begin
-                if (stack_constpush) begin
+                if (stack_constpush || isargpush) begin
                     state <= EXEC;
                 end
                 if (isaluop || iscmp) begin
@@ -160,7 +162,7 @@ module control(
             end
             COMP: begin // comparison operation
                 // jump to this address if comparison is true
-                addr <= (arg1 << 8) | arg2;
+                addr <= {arg1, arg2};
                 // int32 comparison, two stack arguments
                 case (cmptype[2:0])
                     EQ: begin
@@ -192,6 +194,29 @@ module control(
                 if (isaluop) begin
                     stack_write[31:0] <= result_lo[31:0];
                 end
+                if (isargpush) begin
+                    if (argc == 2'b01) begin
+                        stack_write[7:0] = arg1;
+                        // sign extension
+                        if (arg1[7]) begin
+                            stack_write[31:8] = 24'hffff_ff;
+                        end
+                        else begin
+                            stack_write[31:8] = 24'h0000_00;
+                        end
+                    end
+                    else if (argc == 2'b10) begin
+                        stack_write[15:0] = {arg1, arg2};
+                        // sign extension
+                        if (arg1[7]) begin
+                            stack_write[31:16] = 16'hffff;
+                        end
+                        else begin
+                            stack_write[31:16] = 16'h0000;
+                        end
+                    end
+                end
+                // write value to stack if stackwb bit is set
                 if (stackwb) begin
                     stack_push <= 1;
                     state <= WRITE;

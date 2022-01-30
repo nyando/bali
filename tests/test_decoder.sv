@@ -9,6 +9,7 @@ module test_decoder();
     wire isaluop;
     wire iscmp;
     wire [3:0] cmptype;
+    wire isargpush;
     wire [1:0] argc;
     wire [1:0] stackargs;
     wire stackwb;
@@ -21,6 +22,7 @@ module test_decoder();
         .isaluop(isaluop),
         .iscmp(iscmp),
         .cmptype(cmptype),
+        .isargpush(isargpush),
         .argc(argc),
         .stackargs(stackargs),
         .stackwb(stackwb),
