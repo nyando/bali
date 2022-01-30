@@ -61,11 +61,11 @@ module alu(
                 end
                 // ishl: shift integer left
                 ISHL: begin
-                    result_lo = operand_a << 1;
+                    result_lo = operand_a << (operand_b & 32'h0000_001f);
                 end
                 // ishr: shift integer right
                 ISHR: begin
-                    result_lo = operand_a >> 1;
+                    result_lo = operand_a >> (operand_b & 32'h0000_001f);
                 end
                 default: begin
                     result_lo = 32'hXXXX;
