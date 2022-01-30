@@ -1,6 +1,13 @@
 `ifndef _OPCODES_H_
 `define _OPCODES_H_
 
+/*
+ * OPCODES - This header file contains the values for
+ * the subset of the JVM instruction set implemented by the Bali processor.
+ * They're only needed in the decoder unit, but were moved to this header file
+ * for better readability and accessibility.
+ */
+
 // nop - no operation
 localparam NOP = 8'h00;
 

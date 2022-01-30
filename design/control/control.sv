@@ -1,4 +1,4 @@
-`include "headers/comp_types.vh"
+`include "headers/cmptypes.vh"
 
 `timescale 10ns / 10ns
 
