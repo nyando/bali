@@ -12,7 +12,7 @@ endif
 SIM_MODULE := test_cpu
 
 # HW programming parameters (use this for programming the FPGA)
-MODULE_NAME := uart_calc
+MODULE_NAME := uart_echo
 BOARD_NAME := xc7a35ticsg324-1L
 DEVICE_NAME := Digilent/210319AB5574A
 
@@ -23,12 +23,12 @@ CONSTRS_DIR := ./constraints
 SCRIPTS_DIR := ./scripts
 
 SV_SOURCES := \
+	$(SRC_DIR)/cpu.sv \
+	$(SRC_DIR)/alu.sv \
+	$(SRC_DIR)/memory/block_ram.sv \
 	$(SRC_DIR)/control/control.sv \
 	$(SRC_DIR)/control/decoder.sv \
 	$(SRC_DIR)/control/stack32.sv \
-	$(SRC_DIR)/memory/block_ram.sv \
-	$(SRC_DIR)/alu.sv \
-	$(SRC_DIR)/cpu.sv \
 
 SV_SIMS := \
 	$(SIM_DIR)/test_cpu.sv \

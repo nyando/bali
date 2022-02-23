@@ -15,7 +15,7 @@ module block_ram #(
     logic [DATA - 1:0] mem [SIZE - 1:0];
     logic [DATA - 1:0] out;
 
-    always @ (edge clk) begin
+    always @ (posedge clk) begin
         if (write_enable) begin
             mem[addr] <= data;
         end
