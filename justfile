@@ -1,20 +1,19 @@
 # HW programming parameters (use this for programming the FPGA)
-BOARD_NAME := "xc7a35ticsg324-1L"
+BOARD_NAME  := "xc7a35ticsg324-1L"
 DEVICE_NAME := "Digilent/210319AB5574A"
-
-# project directories
-export SRC_DIR := "./design"
-export SIM_DIR := "./tests"
 
 # constraint files and TCL build scripts
 SCRIPTS_DIR := "./scripts"
 
 # get all design and testbench files
-SV_SOURCES := `echo $(find $SRC_DIR -name "*.sv")`
-SV_SIMS := `echo $(find $SIM_DIR -name "*.sv")`
+SV_SOURCES := `echo $(find ./design -name "*.sv")`
+SV_SIMS    := `echo $(find ./tests -name "*.sv")`
 
 # additional arguments to pass to compiler
 SV_OPTS := "--incr"
+
+list dir:
+    @find {{dir}} -name "*.sv" -printf "%f\n" | sed -e "s/.sv//g"
 
 compile:
     xvlog --sv {{SV_OPTS}} {{SV_SOURCES}}
