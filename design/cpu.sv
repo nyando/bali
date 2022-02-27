@@ -8,22 +8,26 @@ module cpu(
     output [15:0] program_counter
 );
 
-    logic stackpush;
-    logic stacktrigger;
-    logic [31:0] stackwrite;
-    logic [31:0] stackread;
-    logic stackdone;
+    logic lva_write;
+    logic [31:0] lva_in;
+    logic [7:0] lva_addr;
+    logic [31:0] lva_out;
+    logic lva_trigger;
+    logic lva_done;
 
-    stack32 eval_stack (
+    lva #(
+        .LVA_SIZE(256)
+    ) localvars (
         .clk(clk),
-        .push(stackpush),
-        .trigger(stacktrigger),
-        .write_value(stackwrite),
-        .read_value(stackread),
-        .done_out(stackdone)
+        .write(lva_write),
+        .trigger(lva_trigger),
+        .addr(lva_addr),
+        .writevalue(lva_in),
+        .readvalue(lva_out),
+        .done(lva_done)
     );
 
-    logic [15:0] pc;
+    logic [7:0] lva_index;
     logic op_done;
     logic [15:0] offset;
 
@@ -32,15 +36,18 @@ module cpu(
         .op_code(op_code),
         .arg1(arg1),
         .arg2(arg2),
-        .stackread(stackread),
-        .stackdone(stackdone),
-        .stackwrite(stackwrite),
-        .stackpush(stackpush),
-        .stacktrigger(stacktrigger),
+        .lvadone(lva_done),
+        .lvaread(lva_out),
+        .lvawrite(lva_in),
+        .lvaindex(lva_index),
+        .lvaop(lva_write),
+        .lvatrigger(lva_trigger),
         .offset(offset),
         .op_done(op_done)
     );
 
+    logic [15:0] pc;
+    
     initial begin
         pc <= 8'h00;
     end
@@ -50,6 +57,7 @@ module cpu(
             // increase program counter by offset
             pc <= pc + offset;
         end
+        lva_addr <= lva_index;
     end
 
     assign program_counter = pc;

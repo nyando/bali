@@ -4,16 +4,17 @@
 
 module control(
     input clk,
-    input [7:0] op_code,
-    input [7:0] arg1,
-    input [7:0] arg2,
-    input [31:0] stackread,
-    input stackdone,
-    output [31:0] stackwrite,
-    output stackpush,
-    output stacktrigger,
-    output [15:0] offset,
-    output op_done
+    input [7:0] op_code,            // current opcode to execute
+    input [7:0] arg1,               // first argument to opcode (pc + 1)
+    input [7:0] arg2,               // second argument to opcode (pc + 2)
+    input lvadone,
+    input [31:0] lvaread,           // value read from local variable array
+    output [31:0] lvawrite,         // value to write to local variable array
+    output [7:0] lvaindex,          // index of local variable to read/write
+    output lvaop,                   // hi if write, lo if read operation on local variable array
+    output lvatrigger,
+    output [15:0] offset,           // offset of next instruction's address to current address
+    output op_done                  // signals completion of fetch-execute cycle
 );
 
     logic done;                     // set to HI for 1 clock cycle when fetch-execute cycle is completed
@@ -27,6 +28,9 @@ module control(
     logic [31:0] constval;          // value of constant to push to stack
     logic isargpush;                // operation pushes byte or short literal to stack
     logic isgoto;                   // operation is unconditional jump
+    logic islvaread;                // operation reads from LVA
+    logic islvawrite;               // operation writes to LVA
+    logic [7:0] lvadecodedindex;    // index of local variable to read from or write to
     logic [1:0] argc;               // number of arguments in code (max 2)
     logic [1:0] stackargs;          // number of elements to pop from stack
     logic stackwb;                  // operation writes to stack
@@ -41,23 +45,35 @@ module control(
         .constval(constval),
         .isargpush(isargpush),
         .isgoto(isgoto),
+        .islvaread(islvaread),
+        .islvawrite(islvawrite),
+        .lvaindex(lvadecodedindex),
         .argc(argc),
         .stackargs(stackargs),
         .stackwb(stackwb)
     );
 
     // stack control
-    logic stack_push;
-    logic stack_trigger;
-    logic [31:0] stack_read;
-    logic [31:0] stack_write;
-    logic stack_done;
+    logic stack_push;               // hi if pushing value to stack, lo if popping
+    logic stack_trigger;            // set to hi for one clock cycle to initiate push or pop operation
+    logic [31:0] stack_read;        // contains last value popped from stack
+    logic [31:0] stack_write;       // contains value to push to stack
+    logic stack_done;               // set to hi for one clock cycle when push or pop operation is complete
+
+    stack32 eval_stack (
+        .clk(clk),
+        .push(stack_push),
+        .trigger(stack_trigger),
+        .write_value(stack_write),
+        .read_value(stack_read),
+        .done_out(stack_done)
+    );
 
     // ALU integration
-    logic [31:0] operand_a;
-    logic [31:0] operand_b;
-    logic [31:0] result_lo;
-    logic [31:0] result_hi;
+    logic [31:0] operand_a;         // first operand of ALU operation
+    logic [31:0] operand_b;         // second operand of ALU operation (if binary operation)
+    logic [31:0] result_lo;         // low 32 bits of ALU result
+    logic [31:0] result_hi;         // high 32 bits of ALU result (if they exist)
     
     alu alu (
         .operand_a(operand_a),
@@ -67,22 +83,28 @@ module control(
         .result_hi(result_hi)
     );
 
-    // number of arguments to pop from the stack
-    logic [1:0] stackarg_counter;
+    logic [1:0] stackarg_counter;   // number of arguments to pop from the stack
 
     // internal state of the control module
-    logic [2:0] state;
-    const logic [2:0] IDLE   = 3'b000;
-    const logic [2:0] FETCH  = 3'b001;
-    const logic [2:0] DECODE = 3'b010;
-    const logic [2:0] S_LOAD = 3'b011;
-    const logic [2:0] COMP   = 3'b100;
-    const logic [2:0] EXEC   = 3'b101;
-    const logic [2:0] WRITE  = 3'b110;
+    logic [3:0] state;
+    const logic [3:0] IDLE      = 4'b0000;
+    const logic [3:0] FETCH     = 4'b0001;
+    const logic [3:0] DECODE    = 4'b0010;
+    const logic [3:0] S_LOAD    = 4'b0011;
+    const logic [3:0] LVA_START = 4'b1000;
+    const logic [3:0] LVA_WAIT  = 4'b0111;
+    const logic [3:0] COMP      = 4'b0100;
+    const logic [3:0] EXEC      = 4'b0101;
+    const logic [3:0] WRITE     = 4'b0110;
 
     // jump ops
-    logic [15:0] pc_offset;
-    logic jump;
+    logic [15:0] pc_offset;         // offset between target address and jump instruction address
+    logic jump;                     // hi if jump instruction, lo otherwise
+    
+    logic [7:0] lva_index;          // index of local variable to read/write to
+    logic lva_op;
+    logic [31:0] lva_write;
+    logic lva_trigger;
 
     initial begin
         state <= IDLE;
@@ -94,6 +116,7 @@ module control(
             IDLE: begin
                 done <= 0;
                 jump <= 0;
+                lva_op <= 0;
                 if (op_code != 8'h00) begin
                     state <= FETCH;
                 end
@@ -102,18 +125,20 @@ module control(
                 end
             end
             FETCH: begin
-                if (isconstpush || isargpush || isgoto) begin
+                if (isconstpush || isargpush || isgoto || islvaread) begin
                     state <= DECODE;
                 end
-                if (isaluop || iscmp) begin
+                if (isaluop || iscmp || islvawrite) begin
                     state <= DECODE;
                     stackarg_counter <= stackargs;
                 end
             end
             DECODE: begin
+                // push constant or goto
                 if (isconstpush || isargpush || isgoto) begin
                     state <= EXEC;
                 end
+                // alu operation or comparison
                 if (isaluop || iscmp) begin
                     stack_push <= 0;
                     stack_trigger <= 1;
@@ -124,9 +149,30 @@ module control(
                 if (isgoto) begin
                     jump <= 1;
                 end
+                // local variable load
+                if (islvaread || islvawrite) begin
+                    // LVA index is argument of opcode
+                    if (argc == 2'b01) begin
+                        lva_index <= arg1;
+                    end
+                    else begin
+                        lva_index <= lvadecodedindex;
+                    end
+                    if (islvaread) begin
+                        lva_op <= 0;
+                        state <= LVA_START;
+                    end
+                    if (islvawrite) begin
+                        lva_op <= 1;
+                        stack_push <= 0;
+                        stack_trigger <= 1;
+                        stackarg_counter <= stackarg_counter - 1;
+                        state <= S_LOAD;
+                    end
+                end
             end
             S_LOAD: begin
-                if (stackdone) begin
+                if (stack_done) begin
                     case (stackarg_counter)
                         2'b11: begin
                             stackarg_counter <= stackarg_counter - 1;
@@ -140,7 +186,7 @@ module control(
                         2'b01: begin
                             // two arguments to pop from stack
                             if (isaluop || iscmp) begin
-                                operand_b[31:0] <= stackread[31:0];
+                                operand_b[31:0] <= stack_read[31:0];
                             end
                             stack_push <= 0;
                             stack_trigger <= 1;
@@ -149,10 +195,14 @@ module control(
                         2'b00: begin
                             // one argument to pop from stack
                             if (isaluop || iscmp) begin
-                                operand_a[31:0] <= stackread[31:0];
+                                operand_a[31:0] <= stack_read[31:0];
                             end
                             if (iscmp) begin
                                 state <= COMP;
+                            end
+                            else if (islvawrite) begin
+                                operand_a[31:0] <= stack_read[31:0];
+                                state <= LVA_START;
                             end
                             else begin
                                 state <= EXEC;
@@ -164,6 +214,22 @@ module control(
                 else begin
                     stack_trigger <= 0;
                 end
+            end
+            LVA_START: begin
+                lva_trigger <= 1;
+                if (islvaread) begin
+                    state <= LVA_WAIT;
+                end
+                else if (islvawrite) begin
+                    lva_write[31:0] <= operand_a[31:0];
+                    state <= LVA_WAIT;
+                end
+            end
+            LVA_WAIT: begin
+                if (lvadone) begin
+                    state <= EXEC;
+                end
+                lva_trigger <= 0;
             end
             COMP: begin // comparison operation
                 // if cmptype[3] is set, operation is ICMP, otherwise compare with zero
@@ -209,6 +275,9 @@ module control(
                         stack_write[31:0] <= { { 16 { arg1[7] } }, arg1[7:0], arg2[7:0] };
                     end
                 end
+                if (islvaread) begin
+                    stack_write[31:0] <= lvaread[31:0];
+                end
                 // write value to stack if stackwb bit is set
                 if (stackwb) begin
                     stack_push <= 1;
@@ -222,7 +291,7 @@ module control(
             end
             WRITE: begin
                 if (stackwb) begin
-                    if (stackdone) begin
+                    if (stack_done) begin
                         state <= IDLE;
                         done <= 1;
                     end
@@ -245,9 +314,10 @@ module control(
     end
 
     assign op_done = done;
-    assign stackwrite = stack_write;
-    assign stackpush = stack_push;
-    assign stacktrigger = stack_trigger;
+    assign lvaindex = lva_index;
+    assign lvaop = lva_op;
+    assign lvawrite = lva_write;
+    assign lvatrigger = lva_trigger;
     assign offset = pc_offset;
 
 endmodule

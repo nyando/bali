@@ -13,6 +13,9 @@ module decoder(
     output isconstpush,
     output [31:0] constval,
     output isgoto,
+    output islvaread,
+    output islvawrite,
+    output [7:0] lvaindex,
     output [1:0] argc,       // number of arguments in program code
     output [1:0] stackargs,  // number of arguments on stack
     output stackwb           // 1 if result is written back onto stack (as with ALU ops), 0 otherwise
@@ -26,6 +29,9 @@ module decoder(
     logic [31:0] const_val;
     logic is_argpush;
     logic is_goto;
+    logic is_lvaread;
+    logic is_lvawrite;
+    logic [7:0] lva_index;
     logic [1:0] arg_c;
     logic [1:0] stack_args;
     logic stack_wb;
@@ -37,6 +43,9 @@ module decoder(
         cmp_type <= 0;
         is_argpush <= 0;
         is_goto <= 0;
+        is_lvaread <= 0;
+        is_lvawrite <= 0;
+        lva_index <= 8'h00;
         arg_c <= 2'b00;
         stack_args <= 2'b00;
         stack_wb <= 0;
@@ -52,6 +61,9 @@ module decoder(
         cmp_type <= 0;
         is_argpush <= 0;
         is_goto <= 0;
+        is_lvaread <= 0;
+        is_lvawrite <= 0;
+        lva_index <= 8'h00;
         arg_c <= 2'b00;
         stack_args <= 2'b00;
         stack_wb <= 0;
@@ -124,23 +136,25 @@ module decoder(
             end
             ILOAD: begin
                 // ILOAD (2 byte)
+                is_lvaread <= 1;
                 arg_c <= 2'b01;
                 stack_args <= 2'b00;
                 stack_wb <= 1;
             end
             /* ILOAD_N */ 8'h1?: begin
+                is_lvaread <= 1;
                 case (opcode[3:0])
                     4'ha: begin
-                        // load 0
+                        lva_index <= 8'h00;
                     end
                     4'hb: begin
-                        // load 1
+                        lva_index <= 8'h01;
                     end
                     4'hc: begin
-                        // load 2
+                        lva_index <= 8'h02;
                     end
                     4'hd: begin
-                        // load 3
+                        lva_index <= 8'h03;
                     end
                     default: begin end
                 endcase
@@ -182,23 +196,28 @@ module decoder(
             end
             ISTORE: begin
                 // ISTORE (2 byte)
+                is_lvawrite <= 1;
                 arg_c <= 2'b01;
                 stack_args <= 2'b01;
                 stack_wb <= 0;
             end
             /* ISTORE_N */ 8'h3?: begin
+                is_lvawrite <= 1;
                 case (opcode[3:0])
                     4'hb: begin
-                        // store 0
+                        lva_index <= 8'h00;
                     end
                     4'hc: begin
                         // store 1
+                        lva_index <= 8'h01;
                     end
                     4'hd: begin
                         // store 2
+                        lva_index <= 8'h02;
                     end
                     4'he: begin
                         // store 3
+                        lva_index <= 8'h03;
                     end
                     default: begin end
                 endcase
@@ -417,6 +436,9 @@ module decoder(
     assign cmptype = cmp_type;
     assign isargpush = is_argpush;
     assign isgoto = is_goto;
+    assign islvaread = is_lvaread;
+    assign islvawrite = is_lvawrite;
+    assign lvaindex = lva_index;
     assign argc = arg_c;
     assign stackargs = stack_args;
     assign stackwb = stack_wb;

@@ -1,0 +1,10 @@
+11 ba 00    //  0: sipush 0xba00
+11 00 be    //  3: sipush 0x00be
+60          //  6: iadd
+3b
+11 ca 00
+11 00 fe
+60
+3c
+1a
+1b
