@@ -12,34 +12,43 @@ SV_SIMS    := `echo $(find ./tests -name "*.sv")`
 # additional arguments to pass to compiler
 SV_OPTS := "--incr"
 
+# list design or test module files
 list dir:
     @find {{dir}} -name "*.sv" -printf "%f\n" | sed -e "s/.sv//g"
 
+# compile design sources using Vivado
 compile:
     xvlog --sv {{SV_OPTS}} {{SV_SOURCES}}
 
+# compile testbench sources using Vivado
 simcompile: compile
     xvlog --sv {{SV_OPTS}} {{SV_SIMS}}
 
+# elaborate source files with testbench SIM_MODULE as top-level module
 elaborate SIM_MODULE: simcompile
     xelab --debug all -top {{SIM_MODULE}} -snapshot {{SIM_MODULE}}_snapshot
 
+# run simulation with testbench SIM_MODULE as top-level module
 simulate SIM_MODULE:
     just elaborate {{SIM_MODULE}}
     xsim {{SIM_MODULE}}_snapshot -R
 
+# run simulation and start Vivado graphical application
 waveform SIM_MODULE:
     just elaborate {{SIM_MODULE}}
     xsim {{SIM_MODULE}}_snapshot --tclbatch {{SCRIPTS_DIR}}/xsim_cfg.tcl
     xsim --gui {{SIM_MODULE}}_snapshot.wdb
 
+# create bitstream with MODULE_NAME as top-level module
 bitstream MODULE_NAME:
     vivado -mode batch -source {{SCRIPTS_DIR}}/create_bitstream.tcl -tclargs {{MODULE_NAME}} {{BOARD_NAME}}
 
+# write generated bitstream to FPGA
 program MODULE_NAME:
     just bitstream {{MODULE_NAME}}
     vivado -mode batch -source {{SCRIPTS_DIR}}/program_fpga.tcl -tclargs {{MODULE_NAME}} {{DEVICE_NAME}}
 
+# clean simulation and bitstream generation files
 clean:
     rm -rf ./output
     rm -rf ./.Xil
