@@ -1,10 +1,10 @@
 11 ba 00    //  0: sipush 0xba00
 11 00 be    //  3: sipush 0x00be
 60          //  6: iadd
-3b
-11 ca 00
-11 00 fe
-60
-3c
-1a
-1b
+3b          //  7: istore_0
+11 ca 00    //  8: sipush 0xca00
+11 00 fe    // 11: sipush 0x00fe
+60          // 14: iadd
+3c          // 15: istore_1
+1a          // 16: iload_0
+1b          // 17: iload_1
