@@ -1,3 +1,5 @@
+`timescale 10ns / 10ns
+
 module lva #(
     parameter LVA_SIZE = 1024,
     localparam ADDR = $clog2(LVA_SIZE)

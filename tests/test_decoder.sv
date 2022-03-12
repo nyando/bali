@@ -24,12 +24,15 @@ module test_decoder();
         .iscmp(iscmp),
         .cmptype(cmptype),
         .isargpush(isargpush),
+        .isconstpush(constpush),
+        .constval(constval),
         .isgoto(isgoto),
+        .islvaread(),
+        .islvawrite(),
+        .lvaindex(),
         .argc(argc),
         .stackargs(stackargs),
-        .stackwb(stackwb),
-        .isconstpush(constpush),
-        .constval(constval)
+        .stackwb(stackwb)
     );
 
     initial begin

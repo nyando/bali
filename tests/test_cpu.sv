@@ -26,6 +26,8 @@ module test_cpu();
         .op_code(opcode),
         .arg1(arg1),
         .arg2(arg2),
+        .dataparams(),
+        .dataindex(),
         .program_counter(pc)
     );
 

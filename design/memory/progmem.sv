@@ -5,6 +5,9 @@ module progmem #(
     localparam PC_LEN = $clog2(SIZE)
 ) (
     input clk,
+    input write,
+    input [15:0] writeaddr,
+    input [7:0] writevalue,
     input [7:0] constindex,
     output [31:0] constparams,
     input [PC_LEN - 1:0] programcounter,
@@ -15,8 +18,15 @@ module progmem #(
 
     logic [7:0] mem [SIZE - 1:0];
     logic [31:0] const_params;
+    logic [7:0] op_code;
+    logic [7:0] arg_1;
+    logic [7:0] arg_2;
     
     always @ (posedge clk) begin
+        if (write) begin
+            mem[writeaddr] <= writevalue;
+        end
+
         const_params <= { mem[constindex * 4],
                           mem[constindex * 4 + 1],
                           mem[constindex * 4 + 2],

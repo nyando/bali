@@ -1,0 +1,28 @@
+00 0c 00 01 // main address
+00 13 00 02 // reverse address
+00 01 e2 40 // int const 12345
+12 02       // ldc 0x02
+b8 00 01    // invokestatic 0x0001
+57          // pop
+b1          // return
+03          // iconst_0
+3c          // istore_1
+1a          // iload_0
+99 00 17    // ifeq 0x17
+1b          // iload_1
+10 0a       // bipush 0x0a
+68          // imul
+3c          // istore_1
+1b          // iload_1
+1a          // iload_0
+10 0a       // bipush 0x0a
+70          // irem
+60          // iadd
+3c          // istore_1
+1a          // iload_0
+10 0a       // bipush 0x0a
+6c          // idiv
+3b          // istore_0
+a7 ff eb    // goto 0xffeb
+1b          // iload_1
+ac          // ireturn

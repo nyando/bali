@@ -1,4 +1,4 @@
-`timescale 10ns / 10ns
+`timescale 1ns / 1ns
 
 /*
 * clk - Clock simulation module for testing.
