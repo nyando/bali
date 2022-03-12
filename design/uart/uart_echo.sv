@@ -1,4 +1,4 @@
-`timescale 100ns / 10ns
+`timescale 10ns / 10ns
 
 /*
  * uart_echo - Echo module for UART testing. 

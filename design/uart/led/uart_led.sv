@@ -1,4 +1,4 @@
-`timescale 100ns / 10ns
+`timescale 10ns / 10ns
 
 /*
  * uart_to_led - Small UART test module that connects a 9600-baud UART receiver

@@ -1,4 +1,4 @@
-`timescale 100ns / 10ns
+`timescale 10ns / 10ns
 
 module uart_calc(
     input clk,
