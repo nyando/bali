@@ -30,18 +30,25 @@ module cpu(
         .done(lva_done)
     );
 
+    // lva I/O for control module
     logic [7:0] lva_index;          // method-local index of local variable to read/write
     logic [7:0] lva_offset;         // absolute address in the LVA is LVA offset - index
-    logic [31:0] ldconst;           // constant load register for passing program int constants to control unit
     logic op_done;                  // hi for one clock cycle when instruction finishes execution
     logic [15:0] offset;            // offset of next instruction to current pc value
-
-    // method eval stack
+    
+    // constant load register for passing program int constants to control unit
+    logic [31:0] ldconst;
+    
+    // method eval stack I/O for control module
     logic evalpush;                 // hi if pushing value to stack, lo if popping
     logic evaltrigger;              // set to hi for one clock cycle to initiate push or pop operation
     logic [31:0] evalread;          // contains last value popped from stack
     logic [31:0] evalwrite;         // contains value to push to stack
     logic evaldone;                 // set to hi for one clock cycle when push or pop operation is complete
+    
+    logic lvamove;                  // trigger to move top of eval stack to lva
+    logic [7:0] lvamoveindex;             // index of lva to move eval stack element to
+    logic lvamovedone;              // hi for one clock cycle when lva move done
 
     // control unit executes the code within a method
     control control_unit (
@@ -56,6 +63,9 @@ module cpu(
         .lvaindex(lva_index),
         .lvaop(lva_write),
         .lvatrigger(lva_trigger),
+        .lvamove(lvamove),
+        .lvamoveindex(lvamoveindex),
+        .lvamovedone(lvamovedone),
         .evalpush(evalpush),
         .evaltrigger(evaltrigger),
         .evalread(evalread),
@@ -63,24 +73,6 @@ module cpu(
         .evaldone(evaldone),
         .offset(offset),
         .op_done(op_done)
-    );
-
-    logic lvastack_push;
-    logic lvastack_trigger;
-    logic [31:0] lvastack_write;
-    logic [31:0] lvastack_read;
-    logic lvastack_done;
-
-    stack #(
-        .STACKDATA(8),
-        .STACKSIZE(256)
-    ) lvaoffsets (
-        .clk(clk),
-        .push(lvastack_push),
-        .trigger(lvastack_trigger),
-        .write_value(lvastack_write),
-        .read_value(lvastack_read),
-        .done_out(lvastack_done)
     );
 
     logic callstack_push;

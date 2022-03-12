@@ -14,6 +14,9 @@ module control(
     output [7:0] lvaindex,          // index of local variable to read/write
     output lvaop,                   // hi if write, lo if read operation on local variable array
     output lvatrigger,
+    input lvamove,
+    input [7:0] lvamoveindex,
+    output lvamovedone,
     output evalpush,               // eval stack: read/write bit
     output evaltrigger,            // eval stack: trigger output for read/write start
     input [31:0] evalread,         // eval stack: value to read
@@ -102,6 +105,8 @@ module control(
     logic [31:0] lva_write;
     logic lva_trigger;
 
+    logic lva_move_done;
+
     initial begin
         state <= IDLE;
         stack_trigger <= 0;
@@ -113,6 +118,7 @@ module control(
                 done <= 0;
                 jump <= 0;
                 lva_op <= 0;
+                lva_move_done <= 0;
                 if (op_code != 8'h00) begin
                     state <= FETCH;
                 end
@@ -317,6 +323,7 @@ module control(
     assign lvaop = lva_op;
     assign lvawrite = lva_write;
     assign lvatrigger = lva_trigger;
+    assign lvamovedone = lva_move_done;
     assign evalpush = stack_push;
     assign evaltrigger = stack_trigger;
     assign evalwrite = stack_write;
