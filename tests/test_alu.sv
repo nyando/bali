@@ -1,4 +1,4 @@
-`timescale 1ns / 1ps
+`timescale 10ns / 10ns
 
 module test_alu();
 

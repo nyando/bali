@@ -17,6 +17,12 @@ module test_control();
         .op_code(op_code),
         .arg1(arg1),
         .arg2(arg2),
+        .lvadone(),
+        .lvaread(),
+        .lvawrite(),
+        .lvaindex(),
+        .lvaop(),
+        .lvatrigger(),
         .offset(offset),
         .op_done(opdone)
     );

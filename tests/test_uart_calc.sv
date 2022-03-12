@@ -1,4 +1,4 @@
-`timescale 100ns / 10ns
+`timescale 10ns / 10ns
 
 task automatic send_i32 (input bit [31:0] in, time hold, ref uart);
     for (int i = 0; i < 4; i++) begin
