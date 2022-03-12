@@ -60,7 +60,10 @@ module control(
     logic [31:0] stack_write;       // contains value to push to stack
     logic stack_done;               // set to hi for one clock cycle when push or pop operation is complete
 
-    stack32 eval_stack (
+    stack #(
+        .STACKDATA(32),
+        .STACKSIZE(32)
+    ) eval_stack (
         .clk(clk),
         .push(stack_push),
         .trigger(stack_trigger),

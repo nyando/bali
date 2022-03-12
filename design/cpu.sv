@@ -31,7 +31,7 @@ module cpu(
     );
 
     logic [7:0] lva_index;          // method-local index of local variable to read/write
-    logic [7:0] stack_offset;       // absolute address in the LVA is call stack offset + index 
+    logic [7:0] lva_offset;         // absolute address in the LVA is LVA offset - index 
     logic op_done;                  // hi for one clock cycle when instruction finishes execution
     logic [15:0] offset;            // offset of next instruction to current pc value
 
@@ -57,7 +57,10 @@ module cpu(
     logic [31:0] lvastack_read;
     logic lvastack_done;
 
-    stack32 lvaoffsets (
+    stack #(
+        .STACKDATA(32),
+        .STACKSIZE(256)
+    ) lvaoffsets (
         .clk(clk),
         .push(lvastack_push),
         .trigger(lvastack_trigger),
@@ -72,7 +75,10 @@ module cpu(
     logic [31:0] callstack_read;
     logic callstack_done;
 
-    stack32 callstack (
+    stack #(
+        .STACKDATA(32),
+        .STACKSIZE(256)
+    ) callstack (
         .clk(clk),
         .push(callstack_push),
         .trigger(callstack_trigger),
@@ -100,7 +106,7 @@ module cpu(
             // increase program counter by offset
             pc <= pc + offset;
         end
-        lva_addr <= lva_index;
+        lva_addr <= lva_offset - lva_index;
 
         if (op_code == INVOKESTATIC) begin
             invoke_state <= STORE;
@@ -111,7 +117,10 @@ module cpu(
                 invoke_state <= IDLE;
             end
             STORE: begin
-                data_index[15:0] <= {arg1, arg2} * 4;
+                data_index[15:0] <= {arg1, arg2};
+            end
+            INVOKE: begin
+                
             end
             default: begin
             end

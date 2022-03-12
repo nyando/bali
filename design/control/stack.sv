@@ -1,11 +1,14 @@
 `timescale 10ns / 10ns
 
-module stack32(
+module stack #(
+    parameter STACKDATA = 32,
+    parameter STACKSIZE = 65_536
+) (
     input clk,
     input push,
     input trigger,
-    input [31:0] write_value,
-    output [31:0] read_value,
+    input [STACKDATA - 1:0] write_value,
+    output [STACKDATA - 1:0] read_value,
     output done_out
 );
 
@@ -20,8 +23,8 @@ module stack32(
     logic writing;
 
     block_ram #(
-        .DATA(32),
-        .SIZE(65_536)
+        .DATA(STACKDATA),
+        .SIZE(STACKSIZE)
     ) memory (
         .clk(clk),
         .write_enable(writing),
@@ -77,7 +80,7 @@ module stack32(
 
     end
     
-    assign read_value[31:0] = word_out[31:0];
+    assign read_value[STACKDATA - 1:0] = word_out[STACKDATA - 1:0];
     assign done_out = done;
 
 endmodule

@@ -34,7 +34,10 @@ module test_stack();
     logic [31:0] data_out;
     logic done_out;
 
-    stack32 stack_instance(
+    stack #(
+        .STACKDATA(32),
+        .STACKSIZE(16)
+    ) stack_instance(
         .clk(clk),
         .push(push),
         .trigger(trigger),
