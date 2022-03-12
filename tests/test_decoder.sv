@@ -30,6 +30,7 @@ module test_decoder();
         .islvaread(),
         .islvawrite(),
         .lvaindex(),
+        .isldc(),
         .argc(argc),
         .stackargs(stackargs),
         .stackwb(stackwb)

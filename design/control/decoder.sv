@@ -16,6 +16,7 @@ module decoder(
     output islvaread,
     output islvawrite,
     output [7:0] lvaindex,
+    output isldc,
     output [1:0] argc,       // number of arguments in program code
     output [1:0] stackargs,  // number of arguments on stack
     output stackwb           // 1 if result is written back onto stack (as with ALU ops), 0 otherwise
@@ -32,6 +33,7 @@ module decoder(
     logic is_lvaread;
     logic is_lvawrite;
     logic [7:0] lva_index;
+    logic is_ldc;
     logic [1:0] arg_c;
     logic [1:0] stack_args;
     logic stack_wb;
@@ -46,6 +48,7 @@ module decoder(
         is_lvaread <= 0;
         is_lvawrite <= 0;
         lva_index <= 8'h00;
+        is_ldc <= 0;
         arg_c <= 2'b00;
         stack_args <= 2'b00;
         stack_wb <= 0;
@@ -64,6 +67,7 @@ module decoder(
         is_lvaread <= 0;
         is_lvawrite <= 0;
         lva_index <= 8'h00;
+        is_ldc <= 0;
         arg_c <= 2'b00;
         stack_args <= 2'b00;
         stack_wb <= 0;
@@ -133,6 +137,7 @@ module decoder(
                 arg_c <= 2'b01;
                 stack_args <= 2'b00;
                 stack_wb <= 1;
+                is_ldc <= 1;
             end
             ILOAD: begin
                 // ILOAD (2 byte)
@@ -439,6 +444,7 @@ module decoder(
     assign islvaread = is_lvaread;
     assign islvawrite = is_lvawrite;
     assign lvaindex = lva_index;
+    assign isldc = is_ldc;
     assign argc = arg_c;
     assign stackargs = stack_args;
     assign stackwb = stack_wb;

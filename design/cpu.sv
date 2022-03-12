@@ -31,9 +31,17 @@ module cpu(
     );
 
     logic [7:0] lva_index;          // method-local index of local variable to read/write
-    logic [7:0] lva_offset;         // absolute address in the LVA is LVA offset - index 
+    logic [7:0] lva_offset;         // absolute address in the LVA is LVA offset - index
+    logic [31:0] ldconst;           // constant load register for passing program int constants to control unit
     logic op_done;                  // hi for one clock cycle when instruction finishes execution
     logic [15:0] offset;            // offset of next instruction to current pc value
+
+    // method eval stack
+    logic evalpush;                 // hi if pushing value to stack, lo if popping
+    logic evaltrigger;              // set to hi for one clock cycle to initiate push or pop operation
+    logic [31:0] evalread;          // contains last value popped from stack
+    logic [31:0] evalwrite;         // contains value to push to stack
+    logic evaldone;                 // set to hi for one clock cycle when push or pop operation is complete
 
     // control unit executes the code within a method
     control control_unit (
@@ -41,12 +49,18 @@ module cpu(
         .op_code(op_code),
         .arg1(arg1),
         .arg2(arg2),
+        .ldconst(ldconst),
         .lvadone(lva_done),
         .lvaread(lva_out),
         .lvawrite(lva_in),
         .lvaindex(lva_index),
         .lvaop(lva_write),
         .lvatrigger(lva_trigger),
+        .evalpush(evalpush),
+        .evaltrigger(evaltrigger),
+        .evalread(evalread),
+        .evalwrite(evalwrite),
+        .evaldone(evaldone),
         .offset(offset),
         .op_done(op_done)
     );
@@ -58,7 +72,7 @@ module cpu(
     logic lvastack_done;
 
     stack #(
-        .STACKDATA(32),
+        .STACKDATA(8),
         .STACKSIZE(256)
     ) lvaoffsets (
         .clk(clk),
@@ -87,7 +101,21 @@ module cpu(
         .done_out(callstack_done)
     );
 
+    // method eval stack instance
+    stack #(
+        .STACKDATA(32),
+        .STACKSIZE(32)
+    ) eval_stack (
+        .clk(clk),
+        .push(evalpush),
+        .trigger(evaltrigger),
+        .write_value(evalwrite),
+        .read_value(evalread),
+        .done_out(evaldone)
+    );
+
     const logic [7:0] INVOKESTATIC = 8'hb8;
+    const logic [7:0] LDC = 8'h12;
 
     const logic [1:0] IDLE   = 2'b00;
     const logic [1:0] STORE  = 2'b01;
@@ -96,7 +124,11 @@ module cpu(
     logic [15:0] pc;                // program counter register, holds address of current instruction
     logic [15:0] data_index;
     logic [1:0] invoke_state;
-    
+
+    logic [15:0] codeaddr;
+    logic [7:0] argcount;
+    logic [7:0] lvamax;
+
     initial begin
         pc <= 8'h00;
     end
@@ -111,6 +143,13 @@ module cpu(
         if (op_code == INVOKESTATIC) begin
             invoke_state <= STORE;
         end
+
+        if (op_code == LDC) begin
+            // control unit takes at least 2 clock cycles to read ldconst,
+            // so just read it out here
+            data_index[15:0] <= {arg1, arg2};
+            ldconst[31:0] <= dataparams[31:0];
+        end
         
         case (invoke_state)
             IDLE: begin
@@ -118,9 +157,10 @@ module cpu(
             end
             STORE: begin
                 data_index[15:0] <= {arg1, arg2};
+                invoke_state <= INVOKE;
             end
             INVOKE: begin
-                
+                // dataparams
             end
             default: begin
             end

@@ -23,6 +23,12 @@ module test_control();
         .lvaindex(),
         .lvaop(),
         .lvatrigger(),
+        .evalpush(),
+        .evaltrigger(),
+        .evalread(),
+        .evalwrite(),
+        .evaldone(),
+        .ldconst(),
         .offset(offset),
         .op_done(opdone)
     );
