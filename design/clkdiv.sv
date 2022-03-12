@@ -1,9 +1,7 @@
-`timescale 100ns / 10ns
+`timescale 10ns / 10ns
 
-/*
- * clkdiv - Clock divider with parametrizable factor.
- * Setting CLKDIV_FACTOR to number N will output one clock cycle for every N input clock cycles.
- */
+// clkdiv - Clock divider with parametrizable factor.
+// Setting CLKDIV_FACTOR to number N will output one clock cycle for every N input clock cycles.
 module clkdiv(
     input clk,
     output divclk
