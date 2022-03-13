@@ -1,4 +1,5 @@
 `include "headers/cmptypes.vh"
+`include "headers/opcodes.vh"
 
 `timescale 10ns / 10ns
 
@@ -105,7 +106,13 @@ module control(
     logic [31:0] lva_write;
     logic lva_trigger;
 
-    logic lva_move_done;
+    logic [3:0] lvamove_state;
+    const logic [3:0] LVAMOVE_IDLE      = 4'b0000;
+    const logic [3:0] LVAMOVE_STACKLOAD = 4'b0001;
+    const logic [3:0] LVAMOVE_STACKWAIT = 4'b0010;
+    const logic [3:0] LVAMOVE_WRITE     = 4'b0011;
+    const logic [3:0] LVAMOVE_WAIT      = 4'b0100;
+    logic lvamove_done;
 
     initial begin
         state <= IDLE;
@@ -113,13 +120,49 @@ module control(
     end
 
     always @ (posedge clk) begin
+        if (lvamove) begin
+            lvamove_state <= LVAMOVE_STACKLOAD;
+        end
+
+        if (lvamove_state != LVAMOVE_IDLE) begin
+            case (lvamove_state)
+                LVAMOVE_STACKLOAD: begin
+                    stack_push <= 0;
+                    stack_trigger <= 1;
+                end
+                LVAMOVE_STACKWAIT: begin
+                    if (evaldone) begin
+                        lvamove_state <= LVAMOVE_WRITE;
+                    end
+                    stack_trigger <= 0;
+                end
+                LVAMOVE_WRITE: begin
+                    lva_write[31:0] <= operand_a[31:0];
+                    lva_index <= lvamoveindex;
+                    lva_trigger <= 1;
+                    lvamove_state <= LVAMOVE_WAIT;
+                end
+                LVAMOVE_WAIT: begin
+                    if (lvadone) begin
+                        lvamove_done <= 1;
+                        lvamove_state <= LVAMOVE_IDLE;
+                    end
+                    lva_trigger <= 0;
+                end
+                default: begin
+                end
+            endcase
+        end
+        else begin
+            lvamove_done <= 0;
+        end
+        
         case (state)
             IDLE: begin
                 done <= 0;
                 jump <= 0;
                 lva_op <= 0;
-                lva_move_done <= 0;
-                if (op_code != 8'h00) begin
+                if (op_code != NOP && op_code != INVOKESTATIC) begin
                     state <= FETCH;
                 end
                 else begin
@@ -323,7 +366,7 @@ module control(
     assign lvaop = lva_op;
     assign lvawrite = lva_write;
     assign lvatrigger = lva_trigger;
-    assign lvamovedone = lva_move_done;
+    assign lvamovedone = lvamove_done;
     assign evalpush = stack_push;
     assign evaltrigger = stack_trigger;
     assign evalwrite = stack_write;

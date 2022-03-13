@@ -133,4 +133,7 @@ localparam ARETURN = 8'hb0;
 // return - return void from method
 localparam RETURN  = 8'hb1;
 
+// invokestatic - invoke new static method
+localparam INVOKESTATIC = 8'hb8;
+
 `endif

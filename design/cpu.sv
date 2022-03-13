@@ -1,3 +1,5 @@
+`include "control/headers/opcodes.vh"
+
 `timescale 10ns / 10ns
 
 module cpu(
@@ -47,7 +49,7 @@ module cpu(
     logic evaldone;                 // set to hi for one clock cycle when push or pop operation is complete
     
     logic lvamove;                  // trigger to move top of eval stack to lva
-    logic [7:0] lvamoveindex;             // index of lva to move eval stack element to
+    logic [7:0] lvamoveindex;       // index of lva to move eval stack element to
     logic lvamovedone;              // hi for one clock cycle when lva move done
 
     // control unit executes the code within a method
@@ -106,12 +108,12 @@ module cpu(
         .done_out(evaldone)
     );
 
-    const logic [7:0] INVOKESTATIC = 8'hb8;
-    const logic [7:0] LDC = 8'h12;
-
-    const logic [1:0] IDLE   = 2'b00;
-    const logic [1:0] STORE  = 2'b01;
-    const logic [1:0] INVOKE = 2'b10;
+    const logic [2:0] IDLE       = 3'b000;
+    const logic [2:0] LOADPARAMS = 3'b001;
+    const logic [2:0] INVOKE     = 3'b010;
+    const logic [2:0] LVAMOVE    = 3'b011;
+    const logic [2:0] LVAWAIT    = 3'b100;
+    const logic [2:0] LVADONE    = 3'b101;
 
     logic [15:0] pc;                // program counter register, holds address of current instruction
     logic [15:0] data_index;
@@ -130,16 +132,17 @@ module cpu(
             // increase program counter by offset
             pc <= pc + offset;
         end
-        lva_addr <= lva_offset - lva_index;
+        // lva_addr <= lva_offset - lva_index;
+        lva_addr <= lva_index;
 
         if (op_code == INVOKESTATIC) begin
-            invoke_state <= STORE;
+            invoke_state <= LOADPARAMS;
         end
 
         if (op_code == LDC) begin
             // control unit takes at least 2 clock cycles to read ldconst,
             // so just read it out here
-            data_index[15:0] <= {arg1, arg2};
+            data_index[15:0] <= { arg1, arg2 };
             ldconst[31:0] <= dataparams[31:0];
         end
         
@@ -147,12 +150,34 @@ module cpu(
             IDLE: begin
                 invoke_state <= IDLE;
             end
-            STORE: begin
-                data_index[15:0] <= {arg1, arg2};
+            LOADPARAMS: begin
+                data_index[15:0] <= { arg1, arg2 };
                 invoke_state <= INVOKE;
             end
             INVOKE: begin
-                // dataparams
+                { codeaddr[15:0], argcount[7:0], lvamax[7:0] } = dataparams[31:0];
+                invoke_state <= LVAMOVE;
+                // increase LVA offset by lvamax
+            end
+            LVAMOVE: begin
+                if (argcount > 0) begin
+                    lvamove <= 1;
+                    invoke_state <= LVAWAIT;
+                end
+                else begin
+                    invoke_state <= LVADONE;
+                end
+            end
+            LVAWAIT: begin
+                if (lvamovedone) begin
+                    argcount <= argcount - 1;
+                    lvamoveindex <= lvamoveindex + 1;
+                    invoke_state <= LVAMOVE;
+                end
+                lvamove <= 0;
+            end
+            LVADONE: begin
+                invoke_state <= IDLE;
             end
             default: begin
             end
