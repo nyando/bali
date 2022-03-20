@@ -47,6 +47,8 @@ module test_invoke();
     logic [7:0] lvamoveindex;
     logic lvamovedone;
 
+    logic [7:0] op_code;
+
     control uut_control (
         .clk(clk),
         .op_code(op_code),
@@ -70,6 +72,34 @@ module test_invoke();
         .offset(),
         .op_done()
     );
+
+    initial begin
+        op_code = 8'h04;
+        #10;
+        op_code = 8'h05;
+        #10;
+
+        // set opcode to invokestatic
+        op_code = 8'hb8;
+        #10;
+
+        // trigger first lva move
+        lvamoveindex = 8'h00;
+        lvamove = 1;
+        #1;
+        lvamove = 0;
+        #10;
+
+        // trigger second lva move
+        lvamoveindex = 8'h01;
+        lvamove = 1;
+        #1;
+        lvamove = 0;
+        #10;
+
+        $finish;
+
+    end
 
 
 endmodule
