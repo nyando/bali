@@ -129,15 +129,17 @@ module control(
                 LVAMOVE_STACKLOAD: begin
                     stack_push <= 0;
                     stack_trigger <= 1;
+                    lvamove_state <= LVAMOVE_STACKWAIT;
                 end
                 LVAMOVE_STACKWAIT: begin
                     if (evaldone) begin
+                        lva_op <= 1;
                         lvamove_state <= LVAMOVE_WRITE;
                     end
                     stack_trigger <= 0;
                 end
                 LVAMOVE_WRITE: begin
-                    lva_write[31:0] <= operand_a[31:0];
+                    lva_write[31:0] <= evalread[31:0];
                     lva_index <= lvamoveindex;
                     lva_trigger <= 1;
                     lvamove_state <= LVAMOVE_WAIT;
@@ -154,6 +156,7 @@ module control(
             endcase
         end
         else begin
+            lva_op <= 0;
             lvamove_done <= 0;
         end
         

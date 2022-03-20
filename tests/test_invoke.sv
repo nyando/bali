@@ -1,3 +1,5 @@
+`timescale 10ns / 10ns
+
 module test_invoke();
 
     logic clk;
@@ -75,9 +77,9 @@ module test_invoke();
 
     initial begin
         op_code = 8'h04;
-        #10;
+        #6;
         op_code = 8'h05;
-        #10;
+        #6;
 
         // set opcode to invokestatic
         op_code = 8'hb8;
