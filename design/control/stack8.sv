@@ -1,5 +1,6 @@
 `timescale 10ns / 10ns
 
+// 32-bit stack on top of 8-bit data bus memory
 module stack8(
     input clk,
     input push,

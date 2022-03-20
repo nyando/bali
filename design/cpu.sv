@@ -33,6 +33,7 @@ module cpu(
     );
 
     // lva I/O for control module
+    // TODO refactor: check if this couldn't be entirely in control module
     logic [7:0] lva_index;          // method-local index of local variable to read/write
     logic [7:0] lva_offset;         // absolute address in the LVA is LVA offset - index
     logic op_done;                  // hi for one clock cycle when instruction finishes execution
@@ -40,14 +41,19 @@ module cpu(
     
     // constant load register for passing program int constants to control unit
     logic [31:0] ldconst;
+
+    // output register for method return values
+    logic [31:0] retval;
     
     // method eval stack I/O for control module
+    // TODO refactor: check if this couldn't be entirely in control module
     logic evalpush;                 // hi if pushing value to stack, lo if popping
     logic evaltrigger;              // set to hi for one clock cycle to initiate push or pop operation
     logic [31:0] evalread;          // contains last value popped from stack
     logic [31:0] evalwrite;         // contains value to push to stack
     logic evaldone;                 // set to hi for one clock cycle when push or pop operation is complete
     
+    // control unit I/O for method invocation
     logic lvamove;                  // trigger to move top of eval stack to lva
     logic [7:0] lvamoveindex;       // index of lva to move eval stack element to
     logic lvamovedone;              // hi for one clock cycle when lva move done
@@ -77,22 +83,23 @@ module cpu(
         .op_done(op_done)
     );
 
-    logic callstack_push;
-    logic callstack_trigger;
-    logic [31:0] callstack_write;
-    logic [31:0] callstack_read;
-    logic callstack_done;
+    // call stack I/O, controlled only by CPU module
+    logic callpush;                 // hi for write, lo for read
+    logic calltrigger;              // hi for one clock cycle to trigger read/write
+    logic [31:0] callwrite;         // value to write to callstack
+    logic [31:0] callread;          // value to read from callstack
+    logic calldone;                 // hi for one clock cycle when read/write done
 
     stack #(
         .STACKDATA(32),
         .STACKSIZE(256)
     ) callstack (
         .clk(clk),
-        .push(callstack_push),
-        .trigger(callstack_trigger),
-        .write_value(callstack_write),
-        .read_value(callstack_read),
-        .done_out(callstack_done)
+        .push(callpush),
+        .trigger(calltrigger),
+        .write_value(callwrite),
+        .read_value(callread),
+        .done_out(calldone)
     );
 
     // method eval stack instance
@@ -107,21 +114,29 @@ module cpu(
         .read_value(evalread),
         .done_out(evaldone)
     );
-
-    const logic [2:0] IDLE       = 3'b000;
-    const logic [2:0] LOADPARAMS = 3'b001;
-    const logic [2:0] INVOKE     = 3'b010;
-    const logic [2:0] LVAMOVE    = 3'b011;
-    const logic [2:0] LVAWAIT    = 3'b100;
-    const logic [2:0] LVADONE    = 3'b101;
+    
+    // procedure for method invocation:
+    // - load parameters from memory (method address, number of arguments, number of local variables)
+    // - transfer values on eval stack to new method's local variable array
+    // - push calling method's return address (pc + 1 from invoke instruction) and LVA offset onto call stack
+    logic [3:0] invoke_state;
+    const logic [3:0] IDLE        = 4'b0000;
+    const logic [3:0] LOADPARAMS  = 4'b0001;
+    const logic [3:0] FETCHPARAMS = 4'b0010;
+    const logic [3:0] LVALOAD     = 4'b0011;
+    const logic [3:0] LVAMOVE     = 4'b0100;
+    const logic [3:0] LVAWAIT     = 4'b0101;
+    const logic [3:0] LVADONE     = 4'b0110;
+    const logic [3:0] CS_PUSH     = 4'b0111;
+    const logic [3:0] CS_WAIT     = 4'b1000;
+    const logic [3:0] INVOKE      = 4'b1001;
 
     logic [15:0] pc;                // program counter register, holds address of current instruction
-    logic [15:0] data_index;
-    logic [1:0] invoke_state;
+    logic [15:0] data_index;        // index of program memory data segment to read (memory address = 4 * data_index)
 
-    logic [15:0] codeaddr;
-    logic [7:0] argcount;
-    logic [7:0] lvamax;
+    logic [15:0] codeaddr;          // address of the method to invoke next
+    logic [7:0] argcount;           // number of arguments of invoked method (i. e. number of elements to transfer from stack to LVA)
+    logic [7:0] lvamax;             // maximum number of local variables of invoked method, argcount <= lvamax
 
     initial begin
         pc <= 8'h00;
@@ -129,11 +144,15 @@ module cpu(
 
     always @ (posedge clk) begin
         if (op_done) begin
-            // increase program counter by offset
-            pc <= pc + offset;
+            if (op_code == IRETURN || op_code == ARETURN || op_code == RETURN) begin
+                // TODO if instruction is RETURN, IRETURN, ARETURN do return procedure
+            end
+            else begin
+                // increase program counter by offset
+                pc <= pc + offset;
+            end
         end
-        // lva_addr <= lva_offset - lva_index;
-        lva_addr <= lva_index;
+        lva_addr <= lva_offset - (lva_index + 1);
 
         if (op_code == INVOKESTATIC) begin
             invoke_state <= LOADPARAMS;
@@ -154,10 +173,14 @@ module cpu(
                 data_index[15:0] <= { arg1, arg2 };
                 invoke_state <= INVOKE;
             end
-            INVOKE: begin
-                { codeaddr[15:0], argcount[7:0], lvamax[7:0] } = dataparams[31:0];
+            FETCHPARAMS: begin
+                { codeaddr[15:0], argcount[7:0], lvamax[7:0] } <= dataparams[31:0];
+                lvamoveindex[7:0] <= dataparams[15:8];
+                invoke_state <= LVALOAD;
+            end
+            LVALOAD: begin
+                lva_offset <= lva_offset + lvamax;
                 invoke_state <= LVAMOVE;
-                // increase LVA offset by lvamax
             end
             LVAMOVE: begin
                 if (argcount > 0) begin
@@ -171,13 +194,29 @@ module cpu(
             LVAWAIT: begin
                 if (lvamovedone) begin
                     argcount <= argcount - 1;
-                    lvamoveindex <= lvamoveindex + 1;
+                    lvamoveindex <= lvamoveindex - 1;
                     invoke_state <= LVAMOVE;
                 end
                 lvamove <= 0;
             end
             LVADONE: begin
-                invoke_state <= IDLE;
+                invoke_state <= CS_PUSH;
+            end
+            CS_PUSH: begin
+                callwrite[31:0] = { pc + 1, lva_offset - lvamax };
+                callpush <= 1;
+                calltrigger <= 1;
+            end
+            CS_WAIT: begin
+                if (calldone) begin
+                    callpush <= 0;
+                    invoke_state <= INVOKE;
+                end
+                calltrigger <= 0;
+            end
+            INVOKE: begin
+                // jump to invoked function's code address
+                pc <= codeaddr;
             end
             default: begin
             end
@@ -185,5 +224,6 @@ module cpu(
     end
 
     assign program_counter = pc;
+    assign dataindex = data_index;
 
 endmodule

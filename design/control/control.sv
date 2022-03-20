@@ -18,11 +18,11 @@ module control(
     input lvamove,
     input [7:0] lvamoveindex,
     output lvamovedone,
-    output evalpush,               // eval stack: read/write bit
-    output evaltrigger,            // eval stack: trigger output for read/write start
-    input [31:0] evalread,         // eval stack: value to read
-    output [31:0] evalwrite,       // eval stack: value to write
-    input evaldone,                // eval stack: trigger input for read/write done
+    output evalpush,                // eval stack: read/write bit
+    output evaltrigger,             // eval stack: trigger output for read/write start
+    input [31:0] evalread,          // eval stack: value to read
+    output [31:0] evalwrite,        // eval stack: value to write
+    input evaldone,                 // eval stack: trigger input for read/write done
     output [15:0] offset,           // offset of next instruction's address to current address
     output op_done                  // signals completion of fetch-execute cycle
 );
@@ -106,6 +106,7 @@ module control(
     logic [31:0] lva_write;
     logic lva_trigger;
 
+    // transfer method arguments on the eval stack to the LVA
     logic [3:0] lvamove_state;
     const logic [3:0] LVAMOVE_IDLE      = 4'b0000;
     const logic [3:0] LVAMOVE_STACKLOAD = 4'b0001;
