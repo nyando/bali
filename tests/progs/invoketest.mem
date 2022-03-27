@@ -1,0 +1,11 @@
+00 08 00 00 // void main()
+00 0f 02 02 // int sum(int, int)
+04          // iconst_1
+05          // iconst_2
+b8 00 01    // invokestatic 0x0001
+57          // pop
+b1          // return
+1a          // iload_0
+1b          // iload_1
+60          // iadd
+ac          // ireturn

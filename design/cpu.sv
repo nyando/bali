@@ -4,6 +4,7 @@
 
 module cpu(
     input clk,
+    input rst,
     input [7:0] op_code,            // current opcode
     input [7:0] arg1,               // (optional) first argument to the current opcode
     input [7:0] arg2,               // (optional) second argument to the current opcode
@@ -33,7 +34,6 @@ module cpu(
     );
 
     // lva I/O for control module
-    // TODO refactor: check if this couldn't be entirely in control module
     logic [7:0] lva_index;          // method-local index of local variable to read/write
     logic [7:0] lva_offset;         // absolute address in the LVA is LVA offset - index
     logic op_done;                  // hi for one clock cycle when instruction finishes execution
@@ -46,7 +46,6 @@ module cpu(
     logic [31:0] retval;
     
     // method eval stack I/O for control module
-    // TODO refactor: check if this couldn't be entirely in control module
     logic evalpush;                 // hi if pushing value to stack, lo if popping
     logic evaltrigger;              // set to hi for one clock cycle to initiate push or pop operation
     logic [31:0] evalread;          // contains last value popped from stack
@@ -119,17 +118,21 @@ module cpu(
     // - load parameters from memory (method address, number of arguments, number of local variables)
     // - transfer values on eval stack to new method's local variable array
     // - push calling method's return address (pc + 1 from invoke instruction) and LVA offset onto call stack
+    // - on return instruction, pop callstack and assign return address to PC, set LVA offset back
     logic [3:0] invoke_state;
     const logic [3:0] IDLE        = 4'b0000;
     const logic [3:0] LOADPARAMS  = 4'b0001;
-    const logic [3:0] FETCHPARAMS = 4'b0010;
-    const logic [3:0] LVALOAD     = 4'b0011;
-    const logic [3:0] LVAMOVE     = 4'b0100;
-    const logic [3:0] LVAWAIT     = 4'b0101;
-    const logic [3:0] LVADONE     = 4'b0110;
-    const logic [3:0] CS_PUSH     = 4'b0111;
-    const logic [3:0] CS_WAIT     = 4'b1000;
-    const logic [3:0] INVOKE      = 4'b1001;
+    const logic [3:0] PARAMWAIT   = 4'b0010;
+    const logic [3:0] FETCHPARAMS = 4'b0011;
+    const logic [3:0] LVALOAD     = 4'b0100;
+    const logic [3:0] LVAMOVE     = 4'b0101;
+    const logic [3:0] LVAWAIT     = 4'b0110;
+    const logic [3:0] LVADONE     = 4'b0111;
+    const logic [3:0] CS_PUSH     = 4'b1000;
+    const logic [3:0] CS_WAIT     = 4'b1001;
+    const logic [3:0] INVOKE      = 4'b1010;
+    const logic [3:0] RET         = 4'b1011;
+    const logic [3:0] INVOKEDONE  = 4'b1100;
 
     logic [15:0] pc;                // program counter register, holds address of current instruction
     logic [15:0] data_index;        // index of program memory data segment to read (memory address = 4 * data_index)
@@ -144,18 +147,12 @@ module cpu(
 
     always @ (posedge clk) begin
         if (op_done) begin
-            if (op_code == IRETURN || op_code == ARETURN || op_code == RETURN) begin
-                // TODO if instruction is RETURN, IRETURN, ARETURN do return procedure
-            end
-            else begin
-                // increase program counter by offset
-                pc <= pc + offset;
-            end
+            // increase program counter by offset
+            pc <= pc + offset;
         end
-        lva_addr <= lva_offset - (lva_index + 1);
-
-        if (op_code == INVOKESTATIC) begin
-            invoke_state <= LOADPARAMS;
+        
+        if (op_code != INVOKESTATIC) begin
+            lva_addr <= lva_offset - lvamax + lva_index;
         end
 
         if (op_code == LDC) begin
@@ -171,11 +168,17 @@ module cpu(
             end
             LOADPARAMS: begin
                 data_index[15:0] <= { arg1, arg2 };
-                invoke_state <= INVOKE;
+                invoke_state <= PARAMWAIT;
+            end
+            PARAMWAIT: begin
+                invoke_state <= FETCHPARAMS;
             end
             FETCHPARAMS: begin
-                { codeaddr[15:0], argcount[7:0], lvamax[7:0] } <= dataparams[31:0];
+                // { codeaddr[15:0], argcount[7:0], lvamax[7:0] } <= dataparams[31:0];
+                codeaddr[15:0] <= dataparams[31:16];
+                argcount[7:0] <= dataparams[15:8];
                 lvamoveindex[7:0] <= dataparams[15:8];
+                lvamax[7:0] <= dataparams[7:0];
                 invoke_state <= LVALOAD;
             end
             LVALOAD: begin
@@ -185,6 +188,8 @@ module cpu(
             LVAMOVE: begin
                 if (argcount > 0) begin
                     lvamove <= 1;
+                    lva_addr <= lva_offset - lvamoveindex;
+                    lvamoveindex <= lvamoveindex - 1;
                     invoke_state <= LVAWAIT;
                 end
                 else begin
@@ -194,7 +199,6 @@ module cpu(
             LVAWAIT: begin
                 if (lvamovedone) begin
                     argcount <= argcount - 1;
-                    lvamoveindex <= lvamoveindex - 1;
                     invoke_state <= LVAMOVE;
                 end
                 lvamove <= 0;
@@ -203,9 +207,11 @@ module cpu(
                 invoke_state <= CS_PUSH;
             end
             CS_PUSH: begin
-                callwrite[31:0] = { pc + 1, lva_offset - lvamax };
+                callwrite[31:16] = pc + 3;
+                callwrite[15:0] = { 8'b00, lva_offset - lvamax };
                 callpush <= 1;
                 calltrigger <= 1;
+                invoke_state <= CS_WAIT;
             end
             CS_WAIT: begin
                 if (calldone) begin
@@ -217,10 +223,41 @@ module cpu(
             INVOKE: begin
                 // jump to invoked function's code address
                 pc <= codeaddr;
+                invoke_state <= INVOKEDONE;
+            end
+            RET: begin
+                if (calldone) begin
+                    pc <= callread[31:16];
+                    lva_offset <= callread[7:0];
+                    invoke_state <= IDLE;
+                end
+                calltrigger <= 0;
+            end
+            INVOKEDONE: begin
+                invoke_state <= IDLE;
             end
             default: begin
             end
         endcase
+        
+        if (op_code == INVOKESTATIC) begin
+            if (invoke_state == IDLE) begin
+                invoke_state <= LOADPARAMS;
+            end
+        end
+        
+        if (op_code == IRETURN || op_code == ARETURN || op_code == RETURN) begin
+            callpush <= 0;
+            calltrigger <= 1;
+            invoke_state <= RET;
+        end     
+        
+        if (rst) begin
+            data_index <= 16'b0000;
+            lva_offset <= 8'b00;
+            invoke_state <= PARAMWAIT;
+        end
+        
     end
 
     assign program_counter = pc;

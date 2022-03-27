@@ -40,8 +40,9 @@ module control(
     logic isgoto;                   // operation is unconditional jump
     logic islvaread;                // operation reads from LVA
     logic islvawrite;               // operation writes to LVA
-    logic isldc;
     logic [7:0] lvadecodedindex;    // index of local variable to read from or write to
+    logic isldc;
+    logic isinvoke;
     logic [1:0] argc;               // number of arguments in code (max 2)
     logic [1:0] stackargs;          // number of elements to pop from stack
     logic stackwb;                  // operation writes to stack
@@ -93,6 +94,9 @@ module control(
     const logic [3:0] EXEC      = 4'b0101;
     const logic [3:0] WRITE     = 4'b0110;
 
+    const logic [1:0] FETCH_WAIT = 2'b11;
+    logic [1:0] fetch_wait;
+
     // jump ops
     logic [15:0] pc_offset;         // offset between target address and jump instruction address
     logic jump;                     // hi if jump instruction, lo otherwise
@@ -118,6 +122,7 @@ module control(
     initial begin
         state <= IDLE;
         stack_trigger <= 0;
+        fetch_wait <= FETCH_WAIT;
     end
 
     always @ (posedge clk) begin
@@ -165,19 +170,21 @@ module control(
             IDLE: begin
                 done <= 0;
                 jump <= 0;
-                lva_op <= 0;
-                if (op_code != NOP && op_code != INVOKESTATIC) begin
-                    state <= FETCH;
+                if (fetch_wait == 0) begin
+                    if (op_code != NOP && op_code != INVOKESTATIC && op_code != IRETURN && op_code != ARETURN && op_code != RETURN) begin
+                        state <= FETCH;
+                    end
+                    else begin
+                        state <= IDLE;
+                    end
                 end
-                else begin
-                    state <= IDLE;
-                end
+                fetch_wait <= fetch_wait - 1;
             end
             FETCH: begin
                 if (isconstpush || isargpush || isgoto || islvaread || isldc) begin
                     state <= DECODE;
                 end
-                if (isaluop || iscmp || islvawrite) begin
+                else if (isaluop || iscmp || islvawrite) begin
                     state <= DECODE;
                     stackarg_counter <= stackargs;
                 end
@@ -339,6 +346,7 @@ module control(
                 else begin
                     state <= IDLE;
                     done <= 1;
+                    fetch_wait <= FETCH_WAIT;
                 end
             end
             WRITE: begin
@@ -346,6 +354,7 @@ module control(
                     if (evaldone) begin
                         state <= IDLE;
                         done <= 1;
+                        fetch_wait <= FETCH_WAIT;
                     end
                     else begin
                         stack_trigger <= 0;

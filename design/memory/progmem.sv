@@ -6,11 +6,11 @@ module progmem #(
 ) (
     input clk,
     input write,
-    input [15:0] writeaddr,
+    input [PC_LEN - 1:0] writeaddr,
     input [7:0] writevalue,
     input [7:0] constindex,
     output [31:0] constparams,
-    input [PC_LEN - 1:0] programcounter,
+    input [15:0] programcounter,
     output [7:0] opcode,
     output [7:0] arg1,
     output [7:0] arg2
