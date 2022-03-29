@@ -23,6 +23,7 @@ module test_cpu();
 
     cpu uut_cpu (
         .clk(clk),
+        .rst(),
         .op_code(opcode),
         .arg1(arg1),
         .arg2(arg2),

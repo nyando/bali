@@ -16,6 +16,8 @@ module decoder(
     output islvaread,
     output islvawrite,
     output [7:0] lvaindex,
+    output isarrread,
+    output isarrwrite,
     output isldc,
     output [1:0] argc,       // number of arguments in program code
     output [1:0] stackargs,  // number of arguments on stack
@@ -33,6 +35,8 @@ module decoder(
     logic is_lvaread;
     logic is_lvawrite;
     logic [7:0] lva_index;
+    logic is_arrread;
+    logic is_arrwrite;
     logic is_ldc;
     logic [1:0] arg_c;
     logic [1:0] stack_args;
@@ -48,6 +52,8 @@ module decoder(
         is_lvaread <= 0;
         is_lvawrite <= 0;
         lva_index <= 8'h00;
+        is_arrread <= 0;
+        is_arrwrite <= 0;
         is_ldc <= 0;
         arg_c <= 2'b00;
         stack_args <= 2'b00;
@@ -67,6 +73,8 @@ module decoder(
         is_lvaread <= 0;
         is_lvawrite <= 0;
         lva_index <= 8'h00;
+        is_arrread <= 0;
+        is_arrwrite <= 0;
         is_ldc <= 0;
         arg_c <= 2'b00;
         stack_args <= 2'b00;
@@ -169,23 +177,26 @@ module decoder(
             end
             IALOAD: begin
                 // IALOAD
+                is_arrread <= 1;
                 arg_c <= 2'b00;
-                stack_args <= 2'b10;
+                stack_args <= 2'b01;
                 stack_wb <= 1;
             end
             /* ALOAD_N */ 8'h2?: begin
+                // array reference is always 0
+                is_lvaread <= 1;
                 case (opcode[3:0])
                     4'ha: begin
-                        // load 0
+                        lva_index <= 8'h00;
                     end
                     4'hb: begin
-                        // load 1
+                        lva_index <= 8'h01;
                     end
                     4'hc: begin
-                        // load 2
+                        lva_index <= 8'h02;
                     end
                     4'hd: begin
-                        // load 3
+                        lva_index <= 8'h03;
                     end
                     default: begin end
                 endcase
@@ -195,8 +206,9 @@ module decoder(
             end
             BALOAD: begin
                 // BALOAD
+                is_arrread <= 1;
                 arg_c <= 2'b00;
-                stack_args <= 2'b10;
+                stack_args <= 2'b01;
                 stack_wb <= 1;
             end
             ISTORE: begin
@@ -232,23 +244,26 @@ module decoder(
             end
             IASTORE: begin
                 // IASTORE
+                is_arrwrite <= 1;
                 arg_c <= 2'b00;
                 stack_args <= 2'b11;
                 stack_wb <= 0;
             end
             /* ASTORE_N */ 8'h4?: begin
+                // array reference is always 0
+                is_lvawrite <= 1;
                 case (opcode[3:0])
                     4'hb: begin
-                        // astore 0
+                        lva_index <= 8'h00;
                     end
                     4'hc: begin
-                        // astore 1
+                        lva_index <= 8'h01;
                     end
                     4'hd: begin
-                        // astore 2
+                        lva_index <= 8'h02;
                     end
                     4'he: begin
-                        // astore 3
+                        lva_index <= 8'h03;
                     end
                     default: begin end
                 endcase
@@ -258,6 +273,7 @@ module decoder(
             end
             BASTORE: begin
                 // BASTORE
+                is_arrwrite <= 1;
                 arg_c <= 2'b00;
                 stack_args <= 2'b11;
                 stack_wb <= 0;
@@ -323,13 +339,13 @@ module decoder(
             IRETURN: begin
                 // IRETURN
                 arg_c <= 2'b00;
-                stack_args <= 2'b01;
+                stack_args <= 2'b00;
                 stack_wb <= 0;
             end
             ARETURN: begin
                 // ARETURN
                 arg_c <= 2'b00;
-                stack_args <= 2'b01;
+                stack_args <= 2'b00;
                 stack_wb <= 0;
             end
             RETURN: begin
@@ -444,6 +460,8 @@ module decoder(
     assign islvaread = is_lvaread;
     assign islvawrite = is_lvawrite;
     assign lvaindex = lva_index;
+    assign isarrread = is_arrread;
+    assign isarrwrite = is_arrwrite;
     assign isldc = is_ldc;
     assign argc = arg_c;
     assign stackargs = stack_args;

@@ -13,6 +13,25 @@ module cpu(
     output [15:0] program_counter   // memory address of current/next opcode
 );
 
+    logic arrwrite;
+    logic arrtrigger;
+    logic [15:0] arraddr;
+    logic [31:0] arrwritevalue;
+    logic [31:0] arrreadvalue;
+    logic arrdone;
+
+    arrayblock #(
+        .ARR_SIZE(65_536)
+    ) staticarray (
+        .clk(clk),
+        .write(arrwrite),
+        .trigger(arrtrigger),
+        .addr(arraddr),
+        .writevalue(arrwritevalue),
+        .readvalue(arrreadvalue),
+        .done(arrdone)
+    );
+
     logic lva_write;                // hi if writing to LVA, lo if reading/idle
     logic [31:0] lva_in;            // value to write to LVA
     logic [7:0] lva_addr;           // address of LVA to read from or write to
@@ -21,8 +40,8 @@ module cpu(
     logic lva_done;                 // hi for one clock cycle when read/write done
 
     // local variable array holds variables for all methods that have not returned yet
-    lva #(
-        .LVA_SIZE(256)
+    arrayblock #(
+        .ARR_SIZE(256)
     ) localvars (
         .clk(clk),
         .write(lva_write),
@@ -73,6 +92,12 @@ module cpu(
         .lvamove(lvamove),
         .lvamoveindex(lvamoveindex),
         .lvamovedone(lvamovedone),
+        .arrop(arrwrite),
+        .arrtrigger(arrtrigger),
+        .arraddr(arraddr),
+        .arrwritevalue(arrwritevalue),
+        .arrreadvalue(arrreadvalue),
+        .arrdone(arrdone),
         .evalpush(evalpush),
         .evaltrigger(evaltrigger),
         .evalread(evalread),

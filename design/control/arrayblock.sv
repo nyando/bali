@@ -1,8 +1,8 @@
 `timescale 10ns / 10ns
 
-module lva #(
-    parameter LVA_SIZE = 1024,
-    localparam ADDR = $clog2(LVA_SIZE)
+module arrayblock #(
+    parameter ARR_SIZE = 1024,
+    localparam ADDR = $clog2(ARR_SIZE)
 ) (
     input clk,
     input write,
@@ -15,8 +15,8 @@ module lva #(
 
     block_ram #(
         .DATA(32),
-        .SIZE(LVA_SIZE)
-    ) lvamem (
+        .SIZE(ARR_SIZE)
+    ) arrmem (
         .clk(clk),
         .write_enable(write),
         .data(writevalue),

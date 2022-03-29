@@ -8,23 +8,34 @@ module control(
     input [7:0] op_code,            // current opcode to execute
     input [7:0] arg1,               // first argument to opcode (pc + 1)
     input [7:0] arg2,               // second argument to opcode (pc + 2)
+    output [15:0] offset,           // offset of next instruction's address to current address
+    output op_done,                 // signals completion of fetch-execute cycle
+
     input [31:0] ldconst,           // input for loaded constant
-    input lvadone,
-    input [31:0] lvaread,           // value read from local variable array
-    output [31:0] lvawrite,         // value to write to local variable array
-    output [7:0] lvaindex,          // index of local variable to read/write
-    output lvaop,                   // hi if write, lo if read operation on local variable array
-    output lvatrigger,
-    input lvamove,
-    input [7:0] lvamoveindex,
-    output lvamovedone,
+
+    output lvaop,                   // LVA: hi if write, lo if read operation
+    output lvatrigger,              // LVA: start read/write operation
+    output [7:0] lvaindex,          // LVA: method-local index of local variable to read/write
+    input [31:0] lvaread,           // LVA: value read from local variable array
+    output [31:0] lvawrite,         // LVA: value to write to local variable array
+    input lvadone,                  // LVA: hi if read/write operation is done
+
+    input lvamove,                  // invoke: initiate moving top of stack to LVA
+    input [7:0] lvamoveindex,       // invoke: next LVA index to write top of stack to
+    output lvamovedone,             // invoke: moved top of stack to LVA
+
+    output arrop,                   // static array: hi to write, lo to read
+    output arrtrigger,              // static array: start read/write procedure
+    output [15:0] arraddr,          // static array: address to read/write
+    input [31:0] arrreadvalue,      // static array: value to read
+    output [31:0] arrwritevalue,    // static array: value to write
+    input arrdone,                  // static array: read/write done
+
     output evalpush,                // eval stack: read/write bit
     output evaltrigger,             // eval stack: trigger output for read/write start
     input [31:0] evalread,          // eval stack: value to read
     output [31:0] evalwrite,        // eval stack: value to write
-    input evaldone,                 // eval stack: trigger input for read/write done
-    output [15:0] offset,           // offset of next instruction's address to current address
-    output op_done                  // signals completion of fetch-execute cycle
+    input evaldone                  // eval stack: trigger input for read/write done
 );
 
     logic done;                     // set to HI for 1 clock cycle when fetch-execute cycle is completed
@@ -41,8 +52,9 @@ module control(
     logic islvaread;                // operation reads from LVA
     logic islvawrite;               // operation writes to LVA
     logic [7:0] lvadecodedindex;    // index of local variable to read from or write to
-    logic isldc;
-    logic isinvoke;
+    logic isarrread;                // operation reads from static array
+    logic isarrwrite;               // operation writes to static array
+    logic isldc;                    // operation loads constant from const pool
     logic [1:0] argc;               // number of arguments in code (max 2)
     logic [1:0] stackargs;          // number of elements to pop from stack
     logic stackwb;                  // operation writes to stack
@@ -60,6 +72,8 @@ module control(
         .islvaread(islvaread),
         .islvawrite(islvawrite),
         .lvaindex(lvadecodedindex),
+        .isarrread(isarrread),
+        .isarrwrite(isarrwrite),
         .isldc(isldc),
         .argc(argc),
         .stackargs(stackargs),
@@ -88,35 +102,46 @@ module control(
     const logic [3:0] FETCH     = 4'b0001;
     const logic [3:0] DECODE    = 4'b0010;
     const logic [3:0] S_LOAD    = 4'b0011;
-    const logic [3:0] LVA_START = 4'b1000;
-    const logic [3:0] LVA_WAIT  = 4'b0111;
-    const logic [3:0] COMP      = 4'b0100;
-    const logic [3:0] EXEC      = 4'b0101;
-    const logic [3:0] WRITE     = 4'b0110;
+    const logic [3:0] LVA_START = 4'b0100;
+    const logic [3:0] LVA_WAIT  = 4'b0101;
+    const logic [3:0] ARR_START = 4'b0110;
+    const logic [3:0] ARR_WAIT  = 4'b0111;
+    const logic [3:0] COMP      = 4'b1000;
+    const logic [3:0] EXEC      = 4'b1001;
+    const logic [3:0] WRITE     = 4'b1010;
 
+    // after done signal, wait while CPU fetches next instruction
     const logic [1:0] FETCH_WAIT = 2'b11;
     logic [1:0] fetch_wait;
 
-    // jump ops
+    // execution flow control outputs
     logic [15:0] pc_offset;         // offset between target address and jump instruction address
     logic jump;                     // hi if jump instruction, lo otherwise
 
-    logic stack_trigger;
-    logic stack_push;
-    logic [31:0] stack_write;
-    
+    // eval stack outputs
+    logic stack_push;               // indicate push/pop operation on stack
+    logic [31:0] stack_write;       // value to push to stack
+    logic stack_trigger;            // trigger push/pop operation on stack
+
+    // local variable array outputs
+    logic lva_op;                   // indicate read/write operation on LVA
     logic [7:0] lva_index;          // index of local variable to read/write to
-    logic lva_op;
-    logic [31:0] lva_write;
-    logic lva_trigger;
+    logic [31:0] lva_write;         // value to write to LVA
+    logic lva_trigger;              // trigger read/write operation on LVA
+
+    // static array outputs
+    logic arr_op;                   // indicate read/write operation on static array
+    logic [15:0] arr_addr;          // address in static array to read/write
+    logic [31:0] arr_write;         // value to write to static array
+    logic arr_trigger;              // trigger read/write operation on static array
 
     // transfer method arguments on the eval stack to the LVA
-    logic [3:0] lvamove_state;
-    const logic [3:0] LVAMOVE_IDLE      = 4'b0000;
-    const logic [3:0] LVAMOVE_STACKLOAD = 4'b0001;
-    const logic [3:0] LVAMOVE_STACKWAIT = 4'b0010;
-    const logic [3:0] LVAMOVE_WRITE     = 4'b0011;
-    const logic [3:0] LVAMOVE_WAIT      = 4'b0100;
+    logic [2:0] lvamove_state;
+    const logic [2:0] LVAMOVE_IDLE      = 3'b000;
+    const logic [2:0] LVAMOVE_STACKLOAD = 3'b001;
+    const logic [2:0] LVAMOVE_STACKWAIT = 3'b010;
+    const logic [2:0] LVAMOVE_WRITE     = 3'b011;
+    const logic [2:0] LVAMOVE_WAIT      = 3'b100;
     logic lvamove_done;
 
     initial begin
@@ -126,6 +151,7 @@ module control(
     end
 
     always @ (posedge clk) begin
+        // ---- STACK TO LVA MOVE SECTION ----
         if (lvamove) begin
             lvamove_state <= LVAMOVE_STACKLOAD;
         end
@@ -165,13 +191,19 @@ module control(
             lva_op <= 0;
             lvamove_done <= 0;
         end
+        // ---- END STACK TO LVA MOVE SECTION ----
         
         case (state)
             IDLE: begin
                 done <= 0;
                 jump <= 0;
                 if (fetch_wait == 0) begin
-                    if (op_code != NOP && op_code != INVOKESTATIC && op_code != IRETURN && op_code != ARETURN && op_code != RETURN) begin
+                    if (op_code != NOP &&
+                        op_code != INVOKESTATIC &&
+                        op_code != IRETURN && 
+                        op_code != ARETURN && 
+                        op_code != RETURN) 
+                    begin
                         state <= FETCH;
                     end
                     else begin
@@ -184,7 +216,7 @@ module control(
                 if (isconstpush || isargpush || isgoto || islvaread || isldc) begin
                     state <= DECODE;
                 end
-                else if (isaluop || iscmp || islvawrite) begin
+                else if (isaluop || iscmp || islvawrite || isarrread || isarrwrite) begin
                     state <= DECODE;
                     stackarg_counter <= stackargs;
                 end
@@ -226,6 +258,13 @@ module control(
                         state <= S_LOAD;
                     end
                 end
+                if (isarrread || isarrwrite) begin
+                    arrwrite <= isarrwrite;
+                    stack_push <= 0;
+                    stack_trigger <= 1;
+                    stackarg_counter <= stackarg_counter - 1;
+                    state <= S_LOAD;
+                end
             end
             S_LOAD: begin
                 if (evaldone) begin
@@ -235,6 +274,9 @@ module control(
                         end
                         2'b10: begin
                             // three arguments to pop from stack
+                            if (isarrwrite) begin
+                                arr_write[31:0] <= evalread[31:0];
+                            end
                             stack_push <= 0;
                             stack_trigger <= 1;
                             stackarg_counter <= stackarg_counter - 1;
@@ -243,6 +285,9 @@ module control(
                             // two arguments to pop from stack
                             if (isaluop || iscmp) begin
                                 operand_b[31:0] <= evalread[31:0];
+                            end
+                            if (isarrread || isarrwrite) begin
+                                arr_addr[15:0] <= evalread[15:0];
                             end
                             stack_push <= 0;
                             stack_trigger <= 1;
@@ -253,12 +298,15 @@ module control(
                             if (isaluop || iscmp) begin
                                 operand_a[31:0] <= evalread[31:0];
                             end
-                            if (iscmp) begin
+                            else if (iscmp) begin
                                 state <= COMP;
                             end
                             else if (islvawrite) begin
                                 operand_a[31:0] <= evalread[31:0];
                                 state <= LVA_START;
+                            end
+                            else if (isarrread || isarrwrite) begin
+                                state <= ARR_START;
                             end
                             else begin
                                 state <= EXEC;
@@ -286,6 +334,16 @@ module control(
                     state <= EXEC;
                 end
                 lva_trigger <= 0;
+            end
+            ARR_START: begin
+                arr_trigger <= 1;
+                state <= ARR_WAIT;
+            end
+            ARR_WAIT: begin
+                if (arrdone) begin
+                    state <= EXEC;
+                end
+                arr_trigger <= 0;
             end
             COMP: begin // comparison operation
                 // if cmptype[3] is set, operation is ICMP, otherwise compare with zero
@@ -334,6 +392,9 @@ module control(
                 if (islvaread) begin
                     stack_write[31:0] <= lvaread[31:0];
                 end
+                if (isarrread) begin
+                    stack_write[31:0] <= arrreadvalue[31:0];
+                end
                 if (isldc) begin
                     stack_write[31:0] <= ldconst[31:0];
                 end
@@ -380,6 +441,10 @@ module control(
     assign lvawrite = lva_write;
     assign lvatrigger = lva_trigger;
     assign lvamovedone = lvamove_done;
+    assign arrop = arr_op;
+    assign arrtrigger = arr_trigger;
+    assign arraddr = arr_addr;
+    assign arrwritevalue = arr_write;
     assign evalpush = stack_push;
     assign evaltrigger = stack_trigger;
     assign evalwrite = stack_write;
