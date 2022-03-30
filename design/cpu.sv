@@ -199,7 +199,6 @@ module cpu(
                 invoke_state <= FETCHPARAMS;
             end
             FETCHPARAMS: begin
-                // { codeaddr[15:0], argcount[7:0], lvamax[7:0] } <= dataparams[31:0];
                 codeaddr[15:0] <= dataparams[31:16];
                 argcount[7:0] <= dataparams[15:8];
                 lvamoveindex[7:0] <= dataparams[15:8];
@@ -233,7 +232,7 @@ module cpu(
             end
             CS_PUSH: begin
                 callwrite[31:16] = pc + 3;
-                callwrite[15:0] = { 8'b00, lva_offset - lvamax };
+                callwrite[15:0] = { 8'h00, lva_offset - lvamax };
                 callpush <= 1;
                 calltrigger <= 1;
                 invoke_state <= CS_WAIT;
@@ -254,7 +253,7 @@ module cpu(
                 if (calldone) begin
                     pc <= callread[31:16];
                     lva_offset <= callread[7:0];
-                    invoke_state <= IDLE;
+                    invoke_state <= INVOKEDONE;
                 end
                 calltrigger <= 0;
             end
@@ -272,14 +271,16 @@ module cpu(
         end
         
         if (op_code == IRETURN || op_code == ARETURN || op_code == RETURN) begin
-            callpush <= 0;
-            calltrigger <= 1;
-            invoke_state <= RET;
+            if (invoke_state == IDLE) begin
+                callpush <= 0;
+                calltrigger <= 1;
+                invoke_state <= RET;
+            end
         end     
         
         if (rst) begin
-            data_index <= 16'b0000;
-            lva_offset <= 8'b00;
+            data_index <= 16'h0000;
+            lva_offset <= 8'h00;
             invoke_state <= PARAMWAIT;
         end
         

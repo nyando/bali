@@ -259,7 +259,7 @@ module control(
                     end
                 end
                 if (isarrread || isarrwrite) begin
-                    arrwrite <= isarrwrite;
+                    arr_write <= isarrwrite;
                     stack_push <= 0;
                     stack_trigger <= 1;
                     stackarg_counter <= stackarg_counter - 1;
@@ -298,7 +298,7 @@ module control(
                             if (isaluop || iscmp) begin
                                 operand_a[31:0] <= evalread[31:0];
                             end
-                            else if (iscmp) begin
+                            if (iscmp) begin
                                 state <= COMP;
                             end
                             else if (islvawrite) begin
