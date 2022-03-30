@@ -32,30 +32,30 @@ module cpu(
         .done(arrdone)
     );
 
-    logic lva_write;                // hi if writing to LVA, lo if reading/idle
-    logic [31:0] lva_in;            // value to write to LVA
-    logic [7:0] lva_addr;           // address of LVA to read from or write to
-    logic [31:0] lva_out;           // value at current lva_addr
-    logic lva_trigger;              // hi for one clock cycle when reading/writing
-    logic lva_done;                 // hi for one clock cycle when read/write done
+    logic lvawrite;                // hi if writing to LVA, lo if reading/idle
+    logic lvatrigger;              // hi for one clock cycle when reading/writing
+    logic [7:0] lvaaddr;           // address of LVA to read from or write to
+    logic [31:0] lvain;            // value to write to LVA
+    logic [31:0] lvaout;           // value at current lva_addr
+    logic lvadone;                 // hi for one clock cycle when read/write done
 
     // local variable array holds variables for all methods that have not returned yet
     arrayblock #(
         .ARR_SIZE(256)
     ) localvars (
         .clk(clk),
-        .write(lva_write),
-        .trigger(lva_trigger),
-        .addr(lva_addr),
-        .writevalue(lva_in),
-        .readvalue(lva_out),
-        .done(lva_done)
+        .write(lvawrite),
+        .trigger(lvatrigger),
+        .addr(lvaaddr),
+        .writevalue(lvain),
+        .readvalue(lvaout),
+        .done(lvadone)
     );
 
     // lva I/O for control module
-    logic [7:0] lva_index;          // method-local index of local variable to read/write
-    logic [7:0] lva_offset;         // absolute address in the LVA is LVA offset - index
-    logic op_done;                  // hi for one clock cycle when instruction finishes execution
+    logic [7:0] lvaindex;          // method-local index of local variable to read/write
+    logic [7:0] lvaoffset;         // absolute address in the LVA is LVA offset - index
+    logic opdone;                  // hi for one clock cycle when instruction finishes execution
     logic [15:0] offset;            // offset of next instruction to current pc value
     
     // constant load register for passing program int constants to control unit
@@ -83,12 +83,12 @@ module cpu(
         .arg1(arg1),
         .arg2(arg2),
         .ldconst(ldconst),
-        .lvadone(lva_done),
-        .lvaread(lva_out),
-        .lvawrite(lva_in),
-        .lvaindex(lva_index),
-        .lvaop(lva_write),
-        .lvatrigger(lva_trigger),
+        .lvadone(lvadone),
+        .lvaread(lvaout),
+        .lvawrite(lvain),
+        .lvaindex(lvaindex),
+        .lvaop(lvawrite),
+        .lvatrigger(lvatrigger),
         .lvamove(lvamove),
         .lvamoveindex(lvamoveindex),
         .lvamovedone(lvamovedone),
@@ -104,7 +104,7 @@ module cpu(
         .evalwrite(evalwrite),
         .evaldone(evaldone),
         .offset(offset),
-        .op_done(op_done)
+        .op_done(opdone)
     );
 
     // call stack I/O, controlled only by CPU module
@@ -171,13 +171,13 @@ module cpu(
     end
 
     always @ (posedge clk) begin
-        if (op_done) begin
+        if (opdone) begin
             // increase program counter by offset
             pc <= pc + offset;
         end
         
         if (op_code != INVOKESTATIC) begin
-            lva_addr <= lva_offset - lvamax + lva_index;
+            lvaaddr <= lvaoffset - lvamax + lvaindex;
         end
 
         if (op_code == LDC) begin
@@ -206,13 +206,13 @@ module cpu(
                 invoke_state <= LVALOAD;
             end
             LVALOAD: begin
-                lva_offset <= lva_offset + lvamax;
+                lvaoffset <= lvaoffset + lvamax;
                 invoke_state <= LVAMOVE;
             end
             LVAMOVE: begin
                 if (argcount > 0) begin
                     lvamove <= 1;
-                    lva_addr <= lva_offset - lvamoveindex;
+                    lvaaddr <= lvaoffset - lvamoveindex;
                     lvamoveindex <= lvamoveindex - 1;
                     invoke_state <= LVAWAIT;
                 end
@@ -232,7 +232,7 @@ module cpu(
             end
             CS_PUSH: begin
                 callwrite[31:16] = pc + 3;
-                callwrite[15:0] = { 8'h00, lva_offset - lvamax };
+                callwrite[15:0] = { 8'h00, lvaoffset - lvamax };
                 callpush <= 1;
                 calltrigger <= 1;
                 invoke_state <= CS_WAIT;
@@ -252,7 +252,7 @@ module cpu(
             RET: begin
                 if (calldone) begin
                     pc <= callread[31:16];
-                    lva_offset <= callread[7:0];
+                    lvaoffset <= callread[7:0];
                     invoke_state <= INVOKEDONE;
                 end
                 calltrigger <= 0;
@@ -280,7 +280,7 @@ module cpu(
         
         if (rst) begin
             data_index <= 16'h0000;
-            lva_offset <= 8'h00;
+            lvaoffset <= 8'h00;
             invoke_state <= PARAMWAIT;
         end
         
