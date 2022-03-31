@@ -7,6 +7,7 @@ SCRIPTS_DIR := "./scripts"
 
 # get all design and testbench files
 SV_SOURCES := `echo $(find ./design -name "*.sv")`
+SV_TESTMOD := "./tests/test_cpu_prog.sv"
 SV_SIMS    := `echo $(find ./tests -name "*.sv")`
 
 # additional arguments to pass to compiler
@@ -36,6 +37,14 @@ simulate SIM_MODULE:
 # run simulation and start Vivado graphical application
 waveform SIM_MODULE:
     just elaborate {{SIM_MODULE}}
+    xsim {{SIM_MODULE}}_snapshot --tclbatch {{SCRIPTS_DIR}}/xsim_cfg.tcl
+    xsim --gui {{SIM_MODULE}}_snapshot.wdb
+
+# run program test
+progtest SIM_MODULE:
+    xvlog --sv {{SV_OPTS}} {{SV_SOURCES}} {{SV_TESTMOD}}
+    xvlog --sv {{SV_OPTS}} {{SV_SIMS}}
+    xelab --debug all -top {{SIM_MODULE}} -snapshot {{SIM_MODULE}}_snapshot
     xsim {{SIM_MODULE}}_snapshot --tclbatch {{SCRIPTS_DIR}}/xsim_cfg.tcl
     xsim --gui {{SIM_MODULE}}_snapshot.wdb
 

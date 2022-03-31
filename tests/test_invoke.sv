@@ -15,8 +15,8 @@ module test_invoke();
     logic [31:0] lvawrite;
     logic lvadone;
 
-    lva #(
-        .LVA_SIZE(8)
+    arrayblock #(
+        .ARR_SIZE(8)
     ) uut_lva (
         .clk(clk),
         .write(lvaop),

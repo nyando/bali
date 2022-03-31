@@ -13,3 +13,4 @@
 10 00       // bipush 0x00   : push arrayref
 10 01       // bipush 0x01   : push index
 2e          // iaload
+00

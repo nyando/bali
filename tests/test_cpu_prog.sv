@@ -1,26 +1,6 @@
 `timescale 10ns / 10ns
 
-task automatic write_mem(
-    input string memfilepath,
-    ref logic write,
-    ref logic [7:0] writeaddr,
-    ref logic [7:0] writevalue
-);
-    logic [7:0] mem [100:0];
-    
-    $readmemh(memfilepath, mem);
-    
-    write = 1;
-    for (int i = 0; i < 50; i++) begin
-        writeaddr = i;
-        writevalue = mem[i];
-        #1;
-    end
-    write = 0;
-
-endtask
-
-module test_cpu_prog();
+module test_cpu_prog #(parameter PROG = "tests/progs/array_ops.mem");
 
     logic clk;
     logic rst;
@@ -66,14 +46,9 @@ module test_cpu_prog();
     );
 
     initial begin
-        write_mem(
-            "tests/progs/array_ops.mem",
-            write,
-            writeaddr,
-            writevalue
-        );
+        $readmemh(PROG, uut_progmem.mem);
         rst = 0;
-        #10;
+        #1;
         rst = 1;
         #1;
         rst = 0;

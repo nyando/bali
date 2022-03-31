@@ -1,5 +1,6 @@
 // jumps.mem
 // Test conditional branching with one and two arguments.
+00 04 00 00
 06          //  0: iconst_3
 05          //  1: iconst_2
 60          //  2: iadd
