@@ -1,3 +1,4 @@
+00 04 00 00
 11 ba 00    //  0: sipush 0xba00
 11 00 be    //  3: sipush 0x00be
 60          //  6: iadd

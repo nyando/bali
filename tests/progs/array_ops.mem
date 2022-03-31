@@ -1,0 +1,15 @@
+00 04 00 00
+10 00       // bipush 0x00   : push arrayref
+10 00       // bipush 0x00   : push index
+11 ca fe    // sipush 0xcafe : push value
+4f          // iastore
+10 00       // bipush 0x00   : push arrayref
+10 01       // bipush 0x01   : push index
+11 ba be    // sipush 0xbabe : push value
+4f          // iastore
+10 00       // bipush 0x00   : push arrayref
+10 00       // bipush 0x00   : push index
+2e          // iaload
+10 00       // bipush 0x00   : push arrayref
+10 01       // bipush 0x01   : push index
+2e          // iaload

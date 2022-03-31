@@ -188,7 +188,7 @@ module control(
             endcase
         end
         else begin
-            lva_op <= 0;
+            //lva_op <= 0;
             lvamove_done <= 0;
         end
         // ---- END STACK TO LVA MOVE SECTION ----
@@ -259,7 +259,7 @@ module control(
                     end
                 end
                 if (isarrread || isarrwrite) begin
-                    arr_write <= isarrwrite;
+                    arr_op <= isarrwrite;
                     stack_push <= 0;
                     stack_trigger <= 1;
                     stackarg_counter <= stackarg_counter - 1;
@@ -275,7 +275,7 @@ module control(
                         2'b10: begin
                             // three arguments to pop from stack
                             if (isarrwrite) begin
-                                arr_write[31:0] <= evalread[31:0];
+                                operand_b[31:0] <= evalread[31:0];
                             end
                             stack_push <= 0;
                             stack_trigger <= 1;
@@ -287,7 +287,7 @@ module control(
                                 operand_b[31:0] <= evalread[31:0];
                             end
                             if (isarrread || isarrwrite) begin
-                                arr_addr[15:0] <= evalread[15:0];
+                                operand_a[15:0] <= evalread[15:0];
                             end
                             stack_push <= 0;
                             stack_trigger <= 1;
@@ -336,11 +336,14 @@ module control(
                 lva_trigger <= 0;
             end
             ARR_START: begin
+                arr_write[31:0] <= operand_b[31:0];
+                arr_addr[15:0] <= operand_a[15:0];
                 arr_trigger <= 1;
                 state <= ARR_WAIT;
             end
             ARR_WAIT: begin
                 if (arrdone) begin
+                    arr_op <= 0;
                     state <= EXEC;
                 end
                 arr_trigger <= 0;

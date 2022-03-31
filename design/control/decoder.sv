@@ -179,7 +179,7 @@ module decoder(
                 // IALOAD
                 is_arrread <= 1;
                 arg_c <= 2'b00;
-                stack_args <= 2'b01;
+                stack_args <= 2'b10;
                 stack_wb <= 1;
             end
             /* ALOAD_N */ 8'h2?: begin
@@ -208,7 +208,7 @@ module decoder(
                 // BALOAD
                 is_arrread <= 1;
                 arg_c <= 2'b00;
-                stack_args <= 2'b01;
+                stack_args <= 2'b10;
                 stack_wb <= 1;
             end
             ISTORE: begin

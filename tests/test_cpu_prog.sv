@@ -67,7 +67,7 @@ module test_cpu_prog();
 
     initial begin
         write_mem(
-            "tests/progs/invoketest.mem",
+            "tests/progs/array_ops.mem",
             write,
             writeaddr,
             writevalue
@@ -77,7 +77,7 @@ module test_cpu_prog();
         rst = 1;
         #1;
         rst = 0;
-        #150;
+        #250;
         $finish;
     end
 
