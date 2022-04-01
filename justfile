@@ -68,4 +68,5 @@ clean:
     rm -f ./*.jou
     rm -f ./*.log
     rm -f ./*.pb
+    rm -f ./*.zip
 
