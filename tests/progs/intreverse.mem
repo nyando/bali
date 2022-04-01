@@ -1,10 +1,10 @@
 00 0c 00 00 // main address
 00 13 01 02 // reverse address
-00 01 e2 40 // int const 12345
+00 00 30 39 // int const 12345
 12 02       // ldc 0x02
 b8 00 01    // invokestatic 0x0001
 57          // pop
-b1          // return
+00          // return
 03          // iconst_0
 3c          // istore_1
 1a          // iload_0

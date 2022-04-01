@@ -32,17 +32,17 @@ module alu(
                     result_lo = operand_a - operand_b;
                 end
                 // imul: multiply two integers
-                /*IMUL: begin
-                    {result_hi, result_lo} = operand_a * operand_b;
+                IMUL: begin
+                    result_lo = operand_a[15:0] * operand_b[15:0];
                 end
                 // idiv: divide two integers
                 IDIV: begin
-                    result_lo = operand_a / operand_b;
+                    result_lo = operand_a[15:0] / operand_b[15:0];
                 end
                 // irem: modulo of two integers
                 IREM: begin
-                    result_lo = operand_a % operand_b;
-                end*/
+                    result_lo = operand_a[15:0] % operand_b[15:0];
+                end
                 // iand: bitwise AND of two integers
                 IAND: begin
                     result_lo = operand_a & operand_b;

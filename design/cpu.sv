@@ -183,7 +183,7 @@ module cpu(
         if (op_code == LDC) begin
             // control unit takes at least 2 clock cycles to read ldconst,
             // so just read it out here
-            data_index[15:0] <= { arg1, arg2 };
+            data_index[15:0] <= { 8'h00, arg1 };
             ldconst[31:0] <= dataparams[31:0];
         end
         
@@ -201,7 +201,7 @@ module cpu(
             FETCHPARAMS: begin
                 codeaddr[15:0] <= dataparams[31:16];
                 argcount[7:0] <= dataparams[15:8];
-                lvamoveindex[7:0] <= dataparams[15:8];
+                lvamoveindex[7:0] <= 8'h00;
                 lvamax[7:0] <= dataparams[7:0];
                 invoke_state <= LVALOAD;
             end
@@ -212,8 +212,7 @@ module cpu(
             LVAMOVE: begin
                 if (argcount > 0) begin
                     lvamove <= 1;
-                    lvaaddr <= lvaoffset - lvamoveindex;
-                    lvamoveindex <= lvamoveindex - 1;
+                    lvaaddr <= lvaoffset - lvamax + lvamoveindex;
                     invoke_state <= LVAWAIT;
                 end
                 else begin
@@ -223,6 +222,7 @@ module cpu(
             LVAWAIT: begin
                 if (lvamovedone) begin
                     argcount <= argcount - 1;
+                    lvamoveindex <= lvamoveindex + 1;
                     invoke_state <= LVAMOVE;
                 end
                 lvamove <= 0;

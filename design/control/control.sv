@@ -55,7 +55,7 @@ module control(
     logic isarrread;                // operation reads from static array
     logic isarrwrite;               // operation writes to static array
     logic ispop;                    // operation pops topmost stack value
-    logic isdup;
+    logic isdup;                    // operation duplicates topmost stack value
     logic isldc;                    // operation loads constant from const pool
     logic [1:0] argc;               // number of arguments in code (max 2)
     logic [1:0] stackargs;          // number of elements to pop from stack
@@ -260,7 +260,6 @@ module control(
                         state <= LVA_START;
                     end
                     if (islvawrite) begin
-                        lva_op <= 1;
                         stack_push <= 0;
                         stack_trigger <= 1;
                         stackarg_counter <= stackarg_counter - 1;
@@ -268,7 +267,6 @@ module control(
                     end
                 end
                 if (isarrread || isarrwrite) begin
-                    arr_op <= isarrwrite;
                     stack_push <= 0;
                     stack_trigger <= 1;
                     stackarg_counter <= stackarg_counter - 1;
@@ -311,10 +309,12 @@ module control(
                                 state <= COMP;
                             end
                             else if (islvawrite) begin
+                                lva_op <= 1;
                                 operand_a[31:0] <= evalread[31:0];
                                 state <= LVA_START;
                             end
                             else if (isarrread || isarrwrite) begin
+                                arr_op <= isarrwrite;
                                 state <= ARR_START;
                             end
                             else if (isdup) begin
