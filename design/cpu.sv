@@ -54,7 +54,7 @@ module cpu(
 
     // lva I/O for control module
     logic [7:0] lvaindex;          // method-local index of local variable to read/write
-    logic [7:0] lvaoffset;         // absolute address in the LVA is LVA offset - index
+    logic [15:0] lvaoffset;         // absolute address in the LVA is LVA offset - index
     logic opdone;                  // hi for one clock cycle when instruction finishes execution
     logic [15:0] offset;            // offset of next instruction to current pc value
     
@@ -276,7 +276,7 @@ module cpu(
         
         if (rst) begin
             data_index <= 16'h0000;
-            lvaoffset <= 8'h00;
+            lvaoffset <= 16'h0000;
             invoke_state <= PARAMWAIT;
         end
         

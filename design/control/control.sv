@@ -173,11 +173,11 @@ module control(
                     if (evaldone) begin
                         lva_op <= 1;
                         lvamove_state <= LVAMOVE_WRITE;
+                        lva_write[31:0] <= evalread[31:0];
                     end
                     stack_trigger <= 0;
                 end
                 LVAMOVE_WRITE: begin
-                    lva_write[31:0] <= evalread[31:0];
                     lva_trigger <= 1;
                     lvamove_state <= LVAMOVE_WAIT;
                 end
