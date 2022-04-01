@@ -21,7 +21,6 @@ module control(
     input lvadone,                  // LVA: hi if read/write operation is done
 
     input lvamove,                  // invoke: initiate moving top of stack to LVA
-    input [7:0] lvamoveindex,       // invoke: next LVA index to write top of stack to
     output lvamovedone,             // invoke: moved top of stack to LVA
 
     output arrop,                   // static array: hi to write, lo to read
@@ -179,7 +178,6 @@ module control(
                 end
                 LVAMOVE_WRITE: begin
                     lva_write[31:0] <= evalread[31:0];
-                    lva_index <= lvamoveindex;
                     lva_trigger <= 1;
                     lvamove_state <= LVAMOVE_WAIT;
                 end

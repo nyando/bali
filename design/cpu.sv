@@ -34,14 +34,14 @@ module cpu(
 
     logic lvawrite;                // hi if writing to LVA, lo if reading/idle
     logic lvatrigger;              // hi for one clock cycle when reading/writing
-    logic [7:0] lvaaddr;           // address of LVA to read from or write to
+    logic [15:0] lvaaddr;           // address of LVA to read from or write to
     logic [31:0] lvain;            // value to write to LVA
     logic [31:0] lvaout;           // value at current lva_addr
     logic lvadone;                 // hi for one clock cycle when read/write done
 
     // local variable array holds variables for all methods that have not returned yet
     arrayblock #(
-        .ARR_SIZE(256)
+        .ARR_SIZE(65_536)
     ) localvars (
         .clk(clk),
         .write(lvawrite),
@@ -73,7 +73,6 @@ module cpu(
     
     // control unit I/O for method invocation
     logic lvamove;                  // trigger to move top of eval stack to lva
-    logic [7:0] lvamoveindex;       // index of lva to move eval stack element to
     logic lvamovedone;              // hi for one clock cycle when lva move done
 
     // control unit executes the code within a method
@@ -90,7 +89,6 @@ module cpu(
         .lvaop(lvawrite),
         .lvatrigger(lvatrigger),
         .lvamove(lvamove),
-        .lvamoveindex(lvamoveindex),
         .lvamovedone(lvamovedone),
         .arrop(arrwrite),
         .arrtrigger(arrtrigger),
@@ -201,7 +199,6 @@ module cpu(
             FETCHPARAMS: begin
                 codeaddr[15:0] <= dataparams[31:16];
                 argcount[7:0] <= dataparams[15:8];
-                lvamoveindex[7:0] <= 8'h00;
                 lvamax[7:0] <= dataparams[7:0];
                 invoke_state <= LVALOAD;
             end
@@ -212,7 +209,7 @@ module cpu(
             LVAMOVE: begin
                 if (argcount > 0) begin
                     lvamove <= 1;
-                    lvaaddr <= lvaoffset - lvamax + lvamoveindex;
+                    lvaaddr <= lvaoffset - lvamax + argcount - 1;
                     invoke_state <= LVAWAIT;
                 end
                 else begin
@@ -222,7 +219,6 @@ module cpu(
             LVAWAIT: begin
                 if (lvamovedone) begin
                     argcount <= argcount - 1;
-                    lvamoveindex <= lvamoveindex + 1;
                     invoke_state <= LVAMOVE;
                 end
                 lvamove <= 0;
