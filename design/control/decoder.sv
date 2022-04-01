@@ -18,6 +18,7 @@ module decoder(
     output [7:0] lvaindex,
     output isarrread,
     output isarrwrite,
+    output ispop,
     output isldc,
     output [1:0] argc,       // number of arguments in program code
     output [1:0] stackargs,  // number of arguments on stack
@@ -37,6 +38,7 @@ module decoder(
     logic [7:0] lva_index;
     logic is_arrread;
     logic is_arrwrite;
+    logic is_pop;
     logic is_ldc;
     logic [1:0] arg_c;
     logic [1:0] stack_args;
@@ -54,6 +56,7 @@ module decoder(
         lva_index <= 8'h00;
         is_arrread <= 0;
         is_arrwrite <= 0;
+        is_pop <= 0;
         is_ldc <= 0;
         arg_c <= 2'b00;
         stack_args <= 2'b00;
@@ -75,6 +78,7 @@ module decoder(
         lva_index <= 8'h00;
         is_arrread <= 0;
         is_arrwrite <= 0;
+        is_pop <= 0;
         is_ldc <= 0;
         arg_c <= 2'b00;
         stack_args <= 2'b00;
@@ -280,6 +284,7 @@ module decoder(
             end
             POP: begin
                 // POP
+                is_pop <= 1;
                 arg_c <= 2'b00;
                 stack_args <= 2'b01;
                 stack_wb <= 0;
@@ -462,6 +467,7 @@ module decoder(
     assign lvaindex = lva_index;
     assign isarrread = is_arrread;
     assign isarrwrite = is_arrwrite;
+    assign ispop = is_pop;
     assign isldc = is_ldc;
     assign argc = arg_c;
     assign stackargs = stack_args;

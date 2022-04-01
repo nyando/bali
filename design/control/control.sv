@@ -54,6 +54,7 @@ module control(
     logic [7:0] lvadecodedindex;    // index of local variable to read from or write to
     logic isarrread;                // operation reads from static array
     logic isarrwrite;               // operation writes to static array
+    logic ispop;                    // operation pops topmost stack value
     logic isldc;                    // operation loads constant from const pool
     logic [1:0] argc;               // number of arguments in code (max 2)
     logic [1:0] stackargs;          // number of elements to pop from stack
@@ -74,6 +75,7 @@ module control(
         .lvaindex(lvadecodedindex),
         .isarrread(isarrread),
         .isarrwrite(isarrwrite),
+        .ispop(ispop),
         .isldc(isldc),
         .argc(argc),
         .stackargs(stackargs),
@@ -181,6 +183,7 @@ module control(
                         lvamove_done <= 1;
                         lvamove_state <= LVAMOVE_IDLE;
                     end
+                    lva_op <= 0;
                     lva_trigger <= 0;
                 end
                 default: begin
@@ -216,7 +219,7 @@ module control(
                 if (isconstpush || isargpush || isgoto || islvaread || isldc) begin
                     state <= DECODE;
                 end
-                else if (isaluop || iscmp || islvawrite || isarrread || isarrwrite) begin
+                else if (isaluop || iscmp || islvawrite || isarrread || isarrwrite || ispop) begin
                     state <= DECODE;
                     stackarg_counter <= stackargs;
                 end
@@ -227,7 +230,7 @@ module control(
                     state <= EXEC;
                 end
                 // alu operation or comparison
-                if (isaluop || iscmp) begin
+                if (isaluop || iscmp || ispop) begin
                     stack_push <= 0;
                     stack_trigger <= 1;
                     stackarg_counter <= stackarg_counter - 1;
