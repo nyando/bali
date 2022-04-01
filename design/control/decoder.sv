@@ -19,6 +19,7 @@ module decoder(
     output isarrread,
     output isarrwrite,
     output ispop,
+    output isdup,
     output isldc,
     output [1:0] argc,       // number of arguments in program code
     output [1:0] stackargs,  // number of arguments on stack
@@ -39,6 +40,7 @@ module decoder(
     logic is_arrread;
     logic is_arrwrite;
     logic is_pop;
+    logic is_dup;
     logic is_ldc;
     logic [1:0] arg_c;
     logic [1:0] stack_args;
@@ -57,6 +59,7 @@ module decoder(
         is_arrread <= 0;
         is_arrwrite <= 0;
         is_pop <= 0;
+        is_dup <= 0;
         is_ldc <= 0;
         arg_c <= 2'b00;
         stack_args <= 2'b00;
@@ -79,6 +82,7 @@ module decoder(
         is_arrread <= 0;
         is_arrwrite <= 0;
         is_pop <= 0;
+        is_dup <= 0;
         is_ldc <= 0;
         arg_c <= 2'b00;
         stack_args <= 2'b00;
@@ -291,6 +295,7 @@ module decoder(
             end
             DUP: begin
                 // DUP
+                is_dup <= 1;
                 arg_c <= 2'b00;
                 stack_args <= 2'b01;
                 stack_wb <= 0;
@@ -468,6 +473,7 @@ module decoder(
     assign isarrread = is_arrread;
     assign isarrwrite = is_arrwrite;
     assign ispop = is_pop;
+    assign isdup = is_dup;
     assign isldc = is_ldc;
     assign argc = arg_c;
     assign stackargs = stack_args;

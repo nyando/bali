@@ -55,6 +55,7 @@ module control(
     logic isarrread;                // operation reads from static array
     logic isarrwrite;               // operation writes to static array
     logic ispop;                    // operation pops topmost stack value
+    logic isdup;
     logic isldc;                    // operation loads constant from const pool
     logic [1:0] argc;               // number of arguments in code (max 2)
     logic [1:0] stackargs;          // number of elements to pop from stack
@@ -76,6 +77,7 @@ module control(
         .isarrread(isarrread),
         .isarrwrite(isarrwrite),
         .ispop(ispop),
+        .isdup(isdup),
         .isldc(isldc),
         .argc(argc),
         .stackargs(stackargs),
@@ -97,6 +99,7 @@ module control(
     );
 
     logic [1:0] stackarg_counter;   // number of arguments to pop from the stack
+    logic [1:0] stackwrite_counter; // number of arguments to write to stack
 
     // internal state of the control module
     logic [3:0] state;
@@ -108,9 +111,11 @@ module control(
     const logic [3:0] LVA_WAIT  = 4'b0101;
     const logic [3:0] ARR_START = 4'b0110;
     const logic [3:0] ARR_WAIT  = 4'b0111;
-    const logic [3:0] COMP      = 4'b1000;
-    const logic [3:0] EXEC      = 4'b1001;
-    const logic [3:0] WRITE     = 4'b1010;
+    const logic [3:0] DUP_START = 4'b1000;
+    const logic [3:0] DUP_WAIT  = 4'b1001;
+    const logic [3:0] COMP      = 4'b1010;
+    const logic [3:0] EXEC      = 4'b1011;
+    const logic [3:0] WRITE     = 4'b1100;
 
     // after done signal, wait while CPU fetches next instruction
     const logic [1:0] FETCH_WAIT = 2'b11;
@@ -215,10 +220,12 @@ module control(
                 fetch_wait <= fetch_wait - 1;
             end
             FETCH: begin
+                // opcodes that do not require popping stack values
                 if (isconstpush || isargpush || isgoto || islvaread || isldc) begin
                     state <= DECODE;
                 end
-                else if (isaluop || iscmp || islvawrite || isarrread || isarrwrite || ispop) begin
+                // opcodes that require reading from stack
+                else if (isaluop || iscmp || islvawrite || isarrread || isarrwrite || ispop || isdup) begin
                     state <= DECODE;
                     stackarg_counter <= stackargs;
                 end
@@ -229,7 +236,7 @@ module control(
                     state <= EXEC;
                 end
                 // alu operation or comparison
-                if (isaluop || iscmp || ispop) begin
+                if (isaluop || iscmp || ispop || isdup) begin
                     stack_push <= 0;
                     stack_trigger <= 1;
                     stackarg_counter <= stackarg_counter - 1;
@@ -310,6 +317,11 @@ module control(
                             else if (isarrread || isarrwrite) begin
                                 state <= ARR_START;
                             end
+                            else if (isdup) begin
+                                operand_a[31:0] <= evalread[31:0];
+                                stackwrite_counter <= 2'b10;
+                                state <= DUP_START;
+                            end
                             else begin
                                 state <= EXEC;
                             end
@@ -349,6 +361,26 @@ module control(
                     state <= EXEC;
                 end
                 arr_trigger <= 0;
+            end
+            DUP_START: begin
+                if (stackwrite_counter == 2'b00) begin
+                    state <= IDLE;
+                    done <= 1;
+                    fetch_wait <= FETCH_WAIT;
+                end
+                else begin
+                    stack_push <= 1;
+                    stack_write[31:0] <= operand_a[31:0];
+                    stack_trigger <= 1;
+                    state <= DUP_WAIT;
+                end
+            end
+            DUP_WAIT: begin
+                if (evaldone) begin
+                    stackwrite_counter <= stackwrite_counter - 1;
+                    state <= DUP_START;
+                end
+                stack_trigger <= 0;
             end
             COMP: begin // comparison operation
                 // if cmptype[3] is set, operation is ICMP, otherwise compare with zero

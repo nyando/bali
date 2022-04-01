@@ -10,6 +10,7 @@ module test_run();
     test_cpu_prog #(.PROG("tests/progs/jumps.mem"))      jumptest(.rst(rst));
     test_cpu_prog #(.PROG("tests/progs/alustack.mem"))   alutest(.rst(rst));
     test_cpu_prog #(.PROG("tests/progs/invoketest.mem")) invoketest(.rst(rst));
+    test_cpu_prog #(.PROG("tests/progs/duptest.mem"))    duptest(.rst(rst));
 
     logic [31:0] expected;
     logic [31:0] found;
@@ -72,6 +73,10 @@ module test_run();
         // test terminal state of static method invocation test
         assert (invoketest.uut_cpu.op_code == 8'h00) else $fatal(1, "opcode in invoke test not NOP, program did not terminate correctly");
         top_of_stack = invoketest.uut_cpu.eval_stack.top_of_stack;
+        assert (top_of_stack == 16'h0000) else $fatal(1, "expected empty stack, found %4h entries", top_of_stack);
+        
+        assert (duptest.uut_cpu.op_code == 8'h00) else $fatal(1, "opcode in duplication test not NOP, program did not terminate correctly");
+        top_of_stack = duptest.uut_cpu.eval_stack.top_of_stack;
         assert (top_of_stack == 16'h0000) else $fatal(1, "expected empty stack, found %4h entries", top_of_stack);
         
         $finish;
