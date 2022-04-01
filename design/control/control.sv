@@ -191,7 +191,6 @@ module control(
             endcase
         end
         else begin
-            //lva_op <= 0;
             lvamove_done <= 0;
         end
         // ---- END STACK TO LVA MOVE SECTION ----
