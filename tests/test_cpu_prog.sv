@@ -1,9 +1,8 @@
 `timescale 10ns / 10ns
 
-module test_cpu_prog #(parameter PROG = "tests/progs/array_ops.mem");
+module test_cpu_prog #(parameter PROG = "tests/progs/array_ops.mem") (input rst);
 
     logic clk;
-    logic rst;
 
     sim_clk simclock (
         .clk(clk)
@@ -47,13 +46,6 @@ module test_cpu_prog #(parameter PROG = "tests/progs/array_ops.mem");
 
     initial begin
         $readmemh(PROG, uut_progmem.mem);
-        rst = 0;
-        #1;
-        rst = 1;
-        #1;
-        rst = 0;
-        #250;
-        $finish;
     end
 
 endmodule
