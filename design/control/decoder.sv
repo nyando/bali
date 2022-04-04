@@ -16,11 +16,13 @@ module decoder(
     output islvaread,
     output islvawrite,
     output [7:0] lvaindex,
+    output isnewarray,
     output isarrread,
     output isarrwrite,
     output ispop,
     output isdup,
     output isldc,
+    output isiinc,
     output [1:0] argc,       // number of arguments in program code
     output [1:0] stackargs,  // number of arguments on stack
     output stackwb           // 1 if result is written back onto stack (as with ALU ops), 0 otherwise
@@ -37,11 +39,13 @@ module decoder(
     logic is_lvaread;
     logic is_lvawrite;
     logic [7:0] lva_index;
+    logic is_newarray;
     logic is_arrread;
     logic is_arrwrite;
     logic is_pop;
     logic is_dup;
     logic is_ldc;
+    logic is_iinc;
     logic [1:0] arg_c;
     logic [1:0] stack_args;
     logic stack_wb;
@@ -56,11 +60,13 @@ module decoder(
         is_lvaread <= 0;
         is_lvawrite <= 0;
         lva_index <= 8'h00;
+        is_newarray <= 0;
         is_arrread <= 0;
         is_arrwrite <= 0;
         is_pop <= 0;
         is_dup <= 0;
         is_ldc <= 0;
+        is_iinc <= 0;
         arg_c <= 2'b00;
         stack_args <= 2'b00;
         stack_wb <= 0;
@@ -79,11 +85,13 @@ module decoder(
         is_lvaread <= 0;
         is_lvawrite <= 0;
         lva_index <= 8'h00;
+        is_newarray <= 0;
         is_arrread <= 0;
         is_arrwrite <= 0;
         is_pop <= 0;
         is_dup <= 0;
         is_ldc <= 0;
+        is_iinc <= 0;
         arg_c <= 2'b00;
         stack_args <= 2'b00;
         stack_wb <= 0;
@@ -328,7 +336,7 @@ module decoder(
             end
             IINC: begin
                 // IINC (3 byte)
-                is_aluop <= 1;
+                is_iinc <= 1;
                 arg_c <= 2'b10;
                 stack_args <= 2'b00;
                 stack_wb <= 0;
@@ -365,95 +373,103 @@ module decoder(
                 stack_wb <= 0;
             end
             /* IFCOND, IF_ICMPCOND (3 byte) */ 8'b10??????: begin
-                case (opcode[3:0])
-                    4'h9: begin
-                        // IFEQ
-                        stack_args <= 2'b01;
-                        stack_wb <= 0;
-                        cmp_type[3] <= 0;
-                        cmp_type[2:0] <= EQ;
-                    end
-                    4'ha: begin
-                        // IFNE
-                        stack_args <= 2'b01;
-                        stack_wb <= 0;
-                        cmp_type[3] <= 0;
-                        cmp_type[2:0] <= NE;
-                    end
-                    4'hb: begin
-                        // IFLT
-                        stack_args <= 2'b01;
-                        stack_wb <= 0;
-                        cmp_type[3] <= 0;
-                        cmp_type[2:0] <= LT;
-                    end
-                    4'hc: begin
-                        // IFGE
-                        stack_args <= 2'b01;
-                        stack_wb <= 0;
-                        cmp_type[3] <= 0;
-                        cmp_type[2:0] <= GE;
-                    end
-                    4'hd: begin
-                        // IFGT
-                        stack_args <= 2'b01;
-                        stack_wb <= 0;
-                        cmp_type[3] <= 0;
-                        cmp_type[2:0] <= GT;
-                    end
-                    4'he: begin
-                        // IFLE
-                        stack_args <= 2'b01;
-                        stack_wb <= 0;
-                        cmp_type[3] <= 0;
-                        cmp_type[2:0] <= LE;
-                    end
-                    4'hf: begin
-                        // IF_ICMPEQ
-                        stack_args <= 2'b10;
-                        stack_wb <= 0;
-                        cmp_type[3] <= 1;
-                        cmp_type[2:0] <= EQ;
-                    end
-                    4'h0: begin
-                        // IF_ICMPNE
-                        stack_args <= 2'b10;
-                        stack_wb <= 0;
-                        cmp_type[3] <= 1;
-                        cmp_type[2:0] <= NE;
-                    end
-                    4'h1: begin
-                        // IF_ICMPLT
-                        stack_args <= 2'b10;
-                        stack_wb <= 0;
-                        cmp_type[3] <= 1;
-                        cmp_type[2:0] <= LT;
-                    end
-                    4'h2: begin
-                        // IF_ICMPGE
-                        stack_args <= 2'b10;
-                        stack_wb <= 0;
-                        cmp_type[3] <= 1;
-                        cmp_type[2:0] <= GE;
-                    end
-                    4'h3: begin
-                        // IF_ICMPGT
-                        stack_args <= 2'b10;
-                        stack_wb <= 0;
-                        cmp_type[3] <= 1;
-                        cmp_type[2:0] <= GT;
-                    end
-                    4'h4: begin
-                        // IF_ICMPLE
-                        stack_args <= 2'b10;
-                        stack_wb <= 0;
-                        cmp_type[3] <= 1;
-                        cmp_type[2:0] <= LE;
-                    end
-                    default: begin end
-                endcase
-                is_cmp <= 1;
-                arg_c <= 2'b10;
+                if (opcode >= 4'h99 || opcode <= 4'ha4) begin
+                    case (opcode[3:0])
+                        4'h9: begin
+                            // IFEQ
+                            stack_args <= 2'b01;
+                            stack_wb <= 0;
+                            cmp_type[3] <= 0;
+                            cmp_type[2:0] <= EQ;
+                        end
+                        4'ha: begin
+                            // IFNE
+                            stack_args <= 2'b01;
+                            stack_wb <= 0;
+                            cmp_type[3] <= 0;
+                            cmp_type[2:0] <= NE;
+                        end
+                        4'hb: begin
+                            // IFLT
+                            stack_args <= 2'b01;
+                            stack_wb <= 0;
+                            cmp_type[3] <= 0;
+                            cmp_type[2:0] <= LT;
+                        end
+                        4'hc: begin
+                            // IFGE
+                            stack_args <= 2'b01;
+                            stack_wb <= 0;
+                            cmp_type[3] <= 0;
+                            cmp_type[2:0] <= GE;
+                        end
+                        4'hd: begin
+                            // IFGT
+                            stack_args <= 2'b01;
+                            stack_wb <= 0;
+                            cmp_type[3] <= 0;
+                            cmp_type[2:0] <= GT;
+                        end
+                        4'he: begin
+                            // IFLE
+                            stack_args <= 2'b01;
+                            stack_wb <= 0;
+                            cmp_type[3] <= 0;
+                            cmp_type[2:0] <= LE;
+                        end
+                        4'hf: begin
+                            // IF_ICMPEQ
+                            stack_args <= 2'b10;
+                            stack_wb <= 0;
+                            cmp_type[3] <= 1;
+                            cmp_type[2:0] <= EQ;
+                        end
+                        4'h0: begin
+                            // IF_ICMPNE
+                            stack_args <= 2'b10;
+                            stack_wb <= 0;
+                            cmp_type[3] <= 1;
+                            cmp_type[2:0] <= NE;
+                        end
+                        4'h1: begin
+                            // IF_ICMPLT
+                            stack_args <= 2'b10;
+                            stack_wb <= 0;
+                            cmp_type[3] <= 1;
+                            cmp_type[2:0] <= LT;
+                        end
+                        4'h2: begin
+                            // IF_ICMPGE
+                            stack_args <= 2'b10;
+                            stack_wb <= 0;
+                            cmp_type[3] <= 1;
+                            cmp_type[2:0] <= GE;
+                        end
+                        4'h3: begin
+                            // IF_ICMPGT
+                            stack_args <= 2'b10;
+                            stack_wb <= 0;
+                            cmp_type[3] <= 1;
+                            cmp_type[2:0] <= GT;
+                        end
+                        4'h4: begin
+                            // IF_ICMPLE
+                            stack_args <= 2'b10;
+                            stack_wb <= 0;
+                            cmp_type[3] <= 1;
+                            cmp_type[2:0] <= LE;
+                        end
+                        default: begin end
+                    endcase
+                    is_cmp <= 1;
+                    arg_c <= 2'b10;
+                end
+                else if (opcode == NEWARRAY) begin
+                    is_newarray <= 1;
+                    arg_c <= 2'b01;
+                    stack_args <= 2'b01;
+                    stack_wb <= 1;
+                end
             end
             default: begin
                 alu_op <= 4'hX;
@@ -470,11 +486,13 @@ module decoder(
     assign islvaread = is_lvaread;
     assign islvawrite = is_lvawrite;
     assign lvaindex = lva_index;
+    assign isnewarray = is_newarray;
     assign isarrread = is_arrread;
     assign isarrwrite = is_arrwrite;
     assign ispop = is_pop;
     assign isdup = is_dup;
     assign isldc = is_ldc;
+    assign isiinc = is_iinc;
     assign argc = arg_c;
     assign stackargs = stack_args;
     assign stackwb = stack_wb;

@@ -51,11 +51,13 @@ module control(
     logic islvaread;                // operation reads from LVA
     logic islvawrite;               // operation writes to LVA
     logic [7:0] lvadecodedindex;    // index of local variable to read from or write to
+    logic isnewarray;               // operation creates a new array reference
     logic isarrread;                // operation reads from static array
     logic isarrwrite;               // operation writes to static array
     logic ispop;                    // operation pops topmost stack value
     logic isdup;                    // operation duplicates topmost stack value
     logic isldc;                    // operation loads constant from const pool
+    logic islvainc;                 // operation increments local variable by argument
     logic [1:0] argc;               // number of arguments in code (max 2)
     logic [1:0] stackargs;          // number of elements to pop from stack
     logic stackwb;                  // operation writes to stack
@@ -73,11 +75,13 @@ module control(
         .islvaread(islvaread),
         .islvawrite(islvawrite),
         .lvaindex(lvadecodedindex),
+        .isnewarray(isnewarray),
         .isarrread(isarrread),
         .isarrwrite(isarrwrite),
         .ispop(ispop),
         .isdup(isdup),
         .isldc(isldc),
+        .isiinc(islvainc),
         .argc(argc),
         .stackargs(stackargs),
         .stackwb(stackwb)
@@ -102,19 +106,21 @@ module control(
 
     // internal state of the control module
     logic [3:0] state;
-    const logic [3:0] IDLE      = 4'b0000;
-    const logic [3:0] FETCH     = 4'b0001;
-    const logic [3:0] DECODE    = 4'b0010;
-    const logic [3:0] S_LOAD    = 4'b0011;
-    const logic [3:0] LVA_START = 4'b0100;
-    const logic [3:0] LVA_WAIT  = 4'b0101;
-    const logic [3:0] ARR_START = 4'b0110;
-    const logic [3:0] ARR_WAIT  = 4'b0111;
-    const logic [3:0] DUP_START = 4'b1000;
-    const logic [3:0] DUP_WAIT  = 4'b1001;
-    const logic [3:0] COMP      = 4'b1010;
-    const logic [3:0] EXEC      = 4'b1011;
-    const logic [3:0] WRITE     = 4'b1100;
+    const logic [3:0] IDLE        = 4'b0000;
+    const logic [3:0] FETCH       = 4'b0001;
+    const logic [3:0] DECODE      = 4'b0010;
+    const logic [3:0] S_LOAD      = 4'b0011;
+    const logic [3:0] LVA_START   = 4'b0100;
+    const logic [3:0] LVA_WAIT    = 4'b0101;
+    const logic [3:0] LVA_INC     = 4'b0110;
+    const logic [3:0] LVA_INCWAIT = 4'b0111;
+    const logic [3:0] ARR_START   = 4'b1000;
+    const logic [3:0] ARR_WAIT    = 4'b1001;
+    const logic [3:0] DUP_START   = 4'b1010;
+    const logic [3:0] DUP_WAIT    = 4'b1011;
+    const logic [3:0] COMP        = 4'b1100;
+    const logic [3:0] EXEC        = 4'b1101;
+    const logic [3:0] WRITE       = 4'b1110;
 
     // after done signal, wait while CPU fetches next instruction
     const logic [1:0] FETCH_WAIT = 2'b11;
@@ -219,11 +225,11 @@ module control(
             end
             FETCH: begin
                 // opcodes that do not require popping stack values
-                if (isconstpush || isargpush || isgoto || islvaread || isldc) begin
+                if (isconstpush || isargpush || isgoto || islvaread || isldc || islvainc) begin
                     state <= DECODE;
                 end
                 // opcodes that require reading from stack
-                else if (isaluop || iscmp || islvawrite || isarrread || isarrwrite || ispop || isdup) begin
+                else if (isaluop || iscmp || islvawrite || isnewarray || isarrread || isarrwrite || ispop || isdup) begin
                     state <= DECODE;
                     stackarg_counter <= stackargs;
                 end
@@ -264,7 +270,12 @@ module control(
                         state <= S_LOAD;
                     end
                 end
-                if (isarrread || isarrwrite) begin
+                if (islvainc) begin
+                    lva_op <= 0;
+                    lva_index <= arg1;
+                    state <= LVA_START;
+                end
+                if (isnewarray || isarrread || isarrwrite) begin
                     stack_push <= 0;
                     stack_trigger <= 1;
                     stackarg_counter <= stackarg_counter - 1;
@@ -315,6 +326,10 @@ module control(
                                 arr_op <= isarrwrite;
                                 state <= ARR_START;
                             end
+                            else if (isnewarray) begin
+                                stack_write[31:0] <= 32'h0000_0000;
+                                state <= EXEC;
+                            end
                             else if (isdup) begin
                                 operand_a[31:0] <= evalread[31:0];
                                 stackwrite_counter <= 2'b10;
@@ -333,7 +348,7 @@ module control(
             end
             LVA_START: begin
                 lva_trigger <= 1;
-                if (islvaread) begin
+                if (islvaread || islvainc) begin
                     state <= LVA_WAIT;
                 end
                 else if (islvawrite) begin
@@ -343,6 +358,24 @@ module control(
             end
             LVA_WAIT: begin
                 if (lvadone) begin
+                    if (islvaread || islvawrite) begin
+                        state <= EXEC;
+                    end
+                    else if (islvainc) begin
+                        lva_write[31:0] <= lvaread[31:0] + arg2[7:0];
+                        lva_op <= 1;
+                        state <= LVA_INC;
+                    end
+                end
+                lva_trigger <= 0;
+            end
+            LVA_INC: begin
+                lva_trigger <= 1;
+                state <= LVA_INCWAIT;
+            end
+            LVA_INCWAIT: begin
+                if (lvadone) begin
+                    lva_op <= 0;
                     state <= EXEC;
                 end
                 lva_trigger <= 0;

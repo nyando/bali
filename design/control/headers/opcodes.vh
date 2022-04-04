@@ -136,4 +136,9 @@ localparam RETURN  = 8'hb1;
 // invokestatic - invoke new static method
 localparam INVOKESTATIC = 8'hb8;
 
+/* ARRAY CREATION OPERATIONS */
+
+// newarray - this is a NOP in bali
+localparam NEWARRAY = 8'hbc;
+
 `endif

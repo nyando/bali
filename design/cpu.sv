@@ -248,7 +248,7 @@ module cpu(
             RET: begin
                 if (calldone) begin
                     pc <= callread[31:16];
-                    lvaoffset <= callread[7:0];
+                    lvaoffset <= callread[15:0];
                     invoke_state <= INVOKEDONE;
                 end
                 calltrigger <= 0;
