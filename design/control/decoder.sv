@@ -372,6 +372,12 @@ module decoder(
                 stack_args <= 2'b00;
                 stack_wb <= 0;
             end
+            NEWARRAY: begin
+                is_newarray <= 1;
+                arg_c <= 2'b01;
+                stack_args <= 2'b01;
+                stack_wb <= 1;
+            end
             /* IFCOND, IF_ICMPCOND (3 byte) */ 8'b10??????: begin
                 if (opcode >= 4'h99 || opcode <= 4'ha4) begin
                     case (opcode[3:0])
@@ -463,12 +469,6 @@ module decoder(
                     endcase
                     is_cmp <= 1;
                     arg_c <= 2'b10;
-                end
-                else if (opcode == NEWARRAY) begin
-                    is_newarray <= 1;
-                    arg_c <= 2'b01;
-                    stack_args <= 2'b01;
-                    stack_wb <= 1;
                 end
             end
             default: begin
