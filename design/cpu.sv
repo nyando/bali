@@ -61,9 +61,6 @@ module cpu(
     // constant load register for passing program int constants to control unit
     logic [31:0] ldconst;
 
-    // output register for method return values
-    logic [31:0] retval;
-    
     // method eval stack I/O for control module
     logic evalpush;                 // hi if pushing value to stack, lo if popping
     logic evaltrigger;              // set to hi for one clock cycle to initiate push or pop operation
