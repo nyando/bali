@@ -15,7 +15,7 @@ module test_quicksort();
         rst = 1;
         #1;
         rst = 0;
-        #10000;
+        #1000000;
         $finish;
     end
 

@@ -54,7 +54,7 @@ module cpu(
 
     // lva I/O for control module
     logic [7:0] lvaindex;          // method-local index of local variable to read/write
-    logic [15:0] lvaoffset;         // absolute address in the LVA is LVA offset - index
+    logic [7:0] lvaoffset;         // absolute address in the LVA is LVA offset - index
     logic opdone;                  // hi for one clock cycle when instruction finishes execution
     logic [15:0] offset;            // offset of next instruction to current pc value
     
@@ -163,6 +163,7 @@ module cpu(
     logic [15:0] codeaddr;          // address of the method to invoke next
     logic [7:0] argcount;           // number of arguments of invoked method (i. e. number of elements to transfer from stack to LVA)
     logic [7:0] lvamax;             // maximum number of local variables of invoked method, argcount <= lvamax
+    logic [7:0] lvamax_caller;      // maximum number of local variables of calling method
 
     initial begin
         pc <= 8'h00;
@@ -191,6 +192,7 @@ module cpu(
             end
             LOADPARAMS: begin
                 data_index[15:0] <= { arg1, arg2 };
+                lvamax_caller[7:0] <= lvamax[7:0];
                 invoke_state <= PARAMWAIT;
             end
             PARAMWAIT: begin
@@ -228,7 +230,7 @@ module cpu(
             end
             CS_PUSH: begin
                 callwrite[31:16] = pc + 3;
-                callwrite[15:0] = { 8'h00, lvaoffset - lvamax };
+                callwrite[15:0] = { lvamax_caller, lvaoffset - lvamax };
                 callpush <= 1;
                 calltrigger <= 1;
                 invoke_state <= CS_WAIT;
@@ -248,7 +250,8 @@ module cpu(
             RET: begin
                 if (calldone) begin
                     pc <= callread[31:16];
-                    lvaoffset <= callread[15:0];
+                    lvamax[7:0] <= callread[15:8];
+                    lvaoffset <= callread[7:0];
                     invoke_state <= INVOKEDONE;
                 end
                 calltrigger <= 0;
@@ -276,7 +279,8 @@ module cpu(
         
         if (rst) begin
             data_index <= 16'h0000;
-            lvaoffset <= 16'h0000;
+            lvaoffset <= 8'h00;
+            lvamax <= 8'h00;
             invoke_state <= PARAMWAIT;
         end
         
