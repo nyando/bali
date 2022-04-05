@@ -128,6 +128,7 @@ module control(
 
     // execution flow control outputs
     logic [15:0] pc_offset;         // offset between target address and jump instruction address
+    logic [31:0] compvalue;         // comparison value, either operand_b or zero
     logic jump;                     // hi if jump instruction, lo otherwise
 
     // eval stack outputs
@@ -315,6 +316,8 @@ module control(
                                 operand_a[31:0] <= evalread[31:0];
                             end
                             if (iscmp) begin
+                                // if cmptype[3] is set, operation is ICMP, otherwise compare with zero
+                                compvalue[31:0] <= cmptype[3] ? operand_b : 32'h0000_0000;
                                 state <= COMP;
                             end
                             else if (islvawrite) begin
@@ -414,25 +417,65 @@ module control(
                 stack_trigger <= 0;
             end
             COMP: begin // comparison operation
-                // if cmptype[3] is set, operation is ICMP, otherwise compare with zero
+                //compvalue[31:0] <= cmptype[3] ? operand_b[31:0] : 32'h0000_0000;
                 case (cmptype[2:0])
                     EQ: begin
-                        jump <= operand_a == (cmptype[3] ? operand_b : 32'h0000_0000);
+                        jump <= operand_a == compvalue;
                     end
                     NE: begin
-                        jump <= operand_a != (cmptype[3] ? operand_b : 32'h0000_0000);
+                        jump <= operand_a != compvalue;
                     end
                     LT: begin
-                        jump <= operand_a < (cmptype[3] ? operand_b : 32'h0000_0000);
+                        // a negative, b nonnegative
+                        if (operand_a[31] == 1 && compvalue[31] == 0) begin
+                            jump <= 1;
+                        end
+                        // a nonnegative, b negative
+                        else if (operand_a[31] == 0 && compvalue[31] == 1) begin
+                            jump <= 0;
+                        end
+                        else begin
+                            jump <= operand_a < compvalue;
+                        end
                     end
                     LE: begin
-                        jump <= operand_a <= (cmptype[3] ? operand_b : 32'h0000_0000);
+                        // a negative, b nonnegative
+                        if (operand_a[31] == 1 && compvalue[31] == 0) begin
+                            jump <= 1;
+                        end
+                        // a nonnegative, b negative
+                        else if (operand_a[31] == 0 && compvalue[31] == 1) begin
+                            jump <= 0;
+                        end
+                        else begin
+                            jump <= operand_a <= compvalue;
+                        end
                     end
                     GE: begin
-                        jump <= operand_a >= (cmptype[3] ? operand_b : 32'h0000_0000);
+                        // a negative, b nonnegative
+                        if (operand_a[31] == 1 && compvalue[31] == 0) begin
+                            jump <= 0;
+                        end
+                        // a nonnegative, b negative
+                        else if (operand_a[31] == 0 && compvalue[31] == 1) begin
+                            jump <= 1;
+                        end
+                        else begin
+                            jump <= operand_a >= compvalue;
+                        end
                     end
                     GT: begin
-                        jump <= operand_a > (cmptype[3] ? operand_b : 32'h0000_0000);
+                        // a negative, b nonnegative
+                        if (operand_a[31] == 1 && compvalue[31] == 0) begin
+                            jump <= 0;
+                        end
+                        // a nonnegative, b negative
+                        else if (operand_a[31] == 0 && compvalue[31] == 1) begin
+                            jump <= 1;
+                        end
+                        else begin
+                            jump <= operand_a > compvalue;
+                        end
                     end
                     default: begin end
                 endcase
