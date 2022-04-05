@@ -417,7 +417,6 @@ module control(
                 stack_trigger <= 0;
             end
             COMP: begin // comparison operation
-                //compvalue[31:0] <= cmptype[3] ? operand_b[31:0] : 32'h0000_0000;
                 case (cmptype[2:0])
                     EQ: begin
                         jump <= operand_a == compvalue;
