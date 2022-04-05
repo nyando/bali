@@ -19,7 +19,14 @@ module test_sampleprogs();
         rst = 1;
         #1;
         rst = 0;
-        #1000;
+        #11000;
+
+        assert (intreversetest.uut_cpu.op_code == 8'h00) else $fatal(1, "opcode in integer reverse test not NOP, program did not terminate correctly");
+        assert (primesievetest.uut_cpu.op_code == 8'h00) else $fatal(1, "opcode in prime sieve test not NOP, program did not terminate correctly");
+        assert (quicksorttest.uut_cpu.op_code == 8'h00) else $fatal(1, "opcode in quicksort test not NOP, program did not terminate correctly");
+        assert (recursivemathtest.uut_cpu.op_code == 8'h00) else $fatal(1, "opcode in recursive math test not NOP, program did not terminate correctly");
+        assert (towerstest.uut_cpu.op_code == 8'h00) else $fatal(1, "opcode in towers of hanoi test not NOP, program did not terminate correctly");
+
         $finish;
     end
 
