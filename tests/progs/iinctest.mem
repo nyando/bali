@@ -1,11 +1,11 @@
-00 05 00 02
-00
-03 // iconst_0
-3b // istore_0
-04 // iconst_1
-3c // istore_1
-84 00 02
-84 01 01
-1a
-1b
-9f ff f3
+00 05 00 02 
+00          // nop
+03          // iconst_0
+3b          // istore_0
+04          // iconst_1
+3c          // istore_1
+84 00 02    // iinc 0 2
+84 01 01    // iinc 1 1
+1a          // iload_0
+1b          // iload_1
+9f ff f3    // if_icmpeq 0xff_f3
