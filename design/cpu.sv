@@ -13,15 +13,15 @@ module cpu(
     output [15:0] program_counter   // memory address of current/next opcode
 );
 
-    logic arrwrite;
-    logic arrtrigger;
-    logic [15:0] arraddr;
-    logic [31:0] arrwritevalue;
-    logic [31:0] arrreadvalue;
-    logic arrdone;
+    logic arrwrite;                 // hi if writing to static array, lo if reading
+    logic arrtrigger;               // hi for one clock cycle when reading/writing
+    logic [15:0] arraddr;           // array index to read from or write to
+    logic [31:0] arrwritevalue;     // value to write to array
+    logic [31:0] arrreadvalue;      // value read from array index
+    logic arrdone;                  // hi for one clock cycle when array operation is completed
 
     arrayblock #(
-        .ARR_SIZE(65_536)
+        .ARR_SIZE(256)
     ) staticarray (
         .clk(clk),
         .write(arrwrite),
@@ -34,14 +34,14 @@ module cpu(
 
     logic lvawrite;                // hi if writing to LVA, lo if reading/idle
     logic lvatrigger;              // hi for one clock cycle when reading/writing
-    logic [15:0] lvaaddr;           // address of LVA to read from or write to
+    logic [15:0] lvaaddr;          // address of LVA to read from or write to
     logic [31:0] lvain;            // value to write to LVA
     logic [31:0] lvaout;           // value at current lva_addr
     logic lvadone;                 // hi for one clock cycle when read/write done
 
     // local variable array holds variables for all methods that have not returned yet
     arrayblock #(
-        .ARR_SIZE(65_536)
+        .ARR_SIZE(256)
     ) localvars (
         .clk(clk),
         .write(lvawrite),
@@ -56,7 +56,7 @@ module cpu(
     logic [7:0] lvaindex;          // method-local index of local variable to read/write
     logic [7:0] lvaoffset;         // absolute address in the LVA is LVA offset - index
     logic opdone;                  // hi for one clock cycle when instruction finishes execution
-    logic [15:0] offset;            // offset of next instruction to current pc value
+    logic [15:0] offset;           // offset of next instruction to current pc value
     
     // constant load register for passing program int constants to control unit
     logic [31:0] ldconst;
@@ -111,7 +111,7 @@ module cpu(
 
     stack #(
         .STACKDATA(32),
-        .STACKSIZE(256)
+        .STACKSIZE(32)
     ) callstack (
         .clk(clk),
         .push(callpush),
