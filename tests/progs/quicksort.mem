@@ -1,16 +1,123 @@
-00 0C 00 02 
-00 3F 03 07 
+00 0c 00 02 
+00 3f 03 07 
 00 91 03 04 
-10 08
-BC 0A
-59 03 10 09 4F 
-59 04 07 4F 
-59 05 06 4F
-59 06 05 4F 
-59 07 10 07 4F 
-59 08 10 06 4F 
-59 10 06 04 4F 
-59 10 07 10 08 4F 
-4C 2B 03 10 07 B8 00 02 B1
+10 08       // bipush 0x08
+bc 0a       // newarray int
+59          // dup
+03          // iconst_0
+10 09       // bipush 0x09
+4f          // iastore
+59          // dup
+04          // iconst_1
+07          // iconst_4
+4f          // iastore
+59          // dup
+05          // iconst_2
+06          // iconst_3
+4f          // iastore
+59          // dup
+06          // iconst_3
+05          // iconst_2
+4f          // iastore
+59          // dup
+07          // iconst_4
+10 07       // bipush 0x07
+4f          // iastore
+59          // dup
+08          // iconst_5
+10 06       // bipush 0x06
+4f          // iastore
+59          // dup
+10 06       // bipush 0x06
+04          // iconst_1
+4f          // iastore
+59          // dup
+10 07       // bipush 0x07
+10 08       // bipush 0x08
+4f          // iastore
+4c          // astore_1
+2b          // aload_1
+03          // iconst_0
+10 07       // bipush 0x07
+b8 00 02    // invokestatic 0x0002 (quicksort)
+00          // nop (main returns)
 // partition
-2A 1C 2E 3E 1B 04 64 36 04 1B 36 05 15 05 1C A2 00 28 2A 15 05 2E 1D A3 00 1A 84 04 01 2A 15 04 2E 36 06 2A 15 04 2A 15 05 2E 4F 2A 15 05 15 06 4F 84 05 01 A7 FF D8 2A 15 04 04 60 2E 36 05 2A 15 04 04 60 2A 1C 2E 4F 2A 1C 15 05 4F 15 04 04 60 AC 1B 1C A2 00 1A 2A 1B 1C B8 00 01 3E 2A 1B 1D 04 64 B8 00 02 2A 1D 04 60 1C B8 00 02 B1
+2a          // aload_0
+1c          // iload_2
+2e          // iaload
+3e          // istore_3
+1b          // iload_1
+04          // iconst_1
+64          // isub
+36 04       // istore 0x04
+1b          // iload_1
+36 05       // istore 0x05
+15 05       // iload 0x05
+1c          // iload_2
+a2 00 28    // if_icmpge 0x0028
+2a          // aload_0
+15 05       // iload 0x05
+2e          // iaload
+1d          // iload_3
+a3 00 1a    // if_icmpgt 0x001a
+84 04 01    // iinc 4 1
+2a          // aload_0
+15 04       // iload 0x04
+2e          // iaload
+36 06       // istore 0x06
+2a          // aload_0
+15 04       // iload 0x04
+2a          // aload_0
+15 05       // iload 0x05
+2e          // iaload
+4f          // iastore
+2a          // aload_0
+15 05       // iload 0x05
+15 06       // iload 0x06
+4f          // iastore
+84 05 01    // iinc 5 1
+a7 ff d8    // goto 0xffd8
+2a          // aload_0
+15 04       // iload 0x04
+04          // iconst_1
+60          // iadd
+2e          // iaload
+36 05       // istore 0x05
+2a          // aload_0
+15 04       // iload 0x04
+04          // iconst_1
+60          // iadd
+2a          // aload_0
+1c          // iload_2
+2e          // iaload
+4f          // iastore
+2a          // aload_0
+1c          // iload_2
+15 05       // iload 0x05
+4f          // iastore
+15 04       // iload 0x04
+04          // iconst_1
+60          // iadd
+ac          // ireturn
+// quicksort
+1b          // iload_1
+1c          // iload_2
+a2 00 1a    // if_icmpge 0x001a
+2a          // aload_0
+1b          // iload_1
+1c          // iload_2
+b8 00 01    // invokestatic 0x0001 (partition)
+3e          // istore_3
+2a          // aload_0
+1b          // iload_1
+1d          // iload_3
+04          // iconst_1
+64          // isub
+b8 00 02    // invokestatic 0x0002 (quicksort)
+2a          // aload_0
+1d          // iload_3
+04          // iconst_1
+60          // iadd
+1c          // iload_2
+b8 00 02    // invokestatic 0x0002 (quicksort)
+b1          // return
