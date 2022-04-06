@@ -4,77 +4,77 @@
 00 4f 01 01
 00 64 02 02
 // main
-05
-05
-b8 00 04
-57
-00 // nop (main returns)
+05          // iconst_2
+05          // iconst_2
+b8 00 04    // invokestatic 0x0004 (multiply)
+57          // pop
+00          // nop (main returns)
 // add
-1a
-9a 00 07
-1b
-a7 00 16
-1b
-9a 00 07
-1a
-a7 00 0e
-1a
-b8 00 02
-1b
-b8 00 03
-b8 00 01
-ac
+1a          // iload_0
+9a 00 07    // ifne 0x0007
+1b          // iload_1
+a7 00 16    // goto 0x0016
+1b          // iload_1
+9a 00 07    // ifne 0x0007
+1a          // iload_0
+a7 00 0e    // goto 0x000e
+1a          // iload_0
+b8 00 02    // invokestatic 0x0002 (decrement)
+1b          // iload_1
+b8 00 03    // invokestatic 0x0003 (increment)
+b8 00 01    // invokestatic 0x0001 (add)
+ac          // ireturn
 // decrement
-1a
-04
-7e
-04
-a0 00 09
-1a
-04
-82
-a7 00 0d
-1a
-04
-7a
-b8 00 02
-04
-78
-04
-82
-ac
+1a          // iload_0
+04          // iconst_1
+7e          // iand
+04          // iconst_1
+a0 00 09    // if_icmpne 0x0009
+1a          // iload_0
+04          // iconst_1
+82          // ixor
+a7 00 0d    // goto 0x000d
+1a          // iload_0
+04          // iconst_1
+7a          // ishr
+b8 00 02    // invokestatic 0x0002 (decrement)
+04          // iconst_1
+78          // ishl
+04          // iconst_1
+82          // ixor
+ac          // ireturn
 // increment
-1a
-04
-7e
-9a 00 09
-1a
-04
-80
-a7 00 0b
-1a
-04
-7a
-b8 00 03
-04
-78
-ac
+1a          // iload_0
+04          // iconst_1
+7e          // iand
+9a 00 09    // ifne 0x0009
+1a          // iload_0
+04          // iconst_1
+80          // ior
+a7 00 0b    // goto 0x000b
+1a          // iload_0
+04          // iconst_1
+7a          // ishr
+b8 00 03    // invokestatic 0x0003 (increment)
+04          // iconst_1
+78          // ishl
+ac          // ireturn
 // multiply
-1a
-99 00 07
-1b
-9a 00 07
-03
-a7 00 18
-1b
-04
-a0 00 07
-1a
-a7 00 0f
-1a
-1a
-1b
-b8 00 02
-b8 00 04
-b8 00 01
-ac
+1a          // iload_0
+99 00 07    // ifeq 0x0007
+1b          // iload_1
+9a 00 07    // ifne 0x0007
+03          // iconst_0
+a7 00 18    // goto 0x0018
+1b          // iload_1
+04          // iconst_1
+a0 00 07    // if_icmpne 0x0007
+1a          // iload_0
+a7 00 0f    // goto 0x000f
+1a          // iload_0
+1a          // iload_0
+1b          // iload_1
+b8 00 02    // invokestatic 0x0002 (decrement)
+b8 00 04    // invokestatic 0x0004 (multiply)
+b8 00 01    // invokestatic 0x0001 (add)
+ac          // ireturn

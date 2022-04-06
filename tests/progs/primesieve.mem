@@ -1,26 +1,56 @@
 00 08 00 03
 00 17 02 04
+// main
 10 14       // bipush 0x14
-3C          // istore_1
-1B          // iload_1
+3c          // istore_1
+1b          // iload_1
 04          // iconst_1
 60          // iadd
-BC 04       // newarray boolean
-4D          // astore_2
-2C          // aload_2
-1B          // iload_1
-B8 00 01    // invokestatic 0x0001 (sieve)
-00          // nop (ret2main)
+bc 04       // newarray boolean
+4d          // astore_2
+2c          // aload_2
+1b          // iload_1
+b8 00 01    // invokestatic 0x0001 (sieve)
+00          // nop (main returns)
+// sieve
 03          // iconst_0
-3D          // istore_2
-1C          // iload_2
-1B          // iload_1
-A3 00 0D    // if_icmpgt 0x000d
-2A          // aload_0
-1C          //
-04
-54
-84 02
-01
-A7 FF F4
-05 3D 1C 1C 68 1B A3 00 23 2A 1C 33 99 00 17 1C 1C 68 3E 1D 1B A3 00 0E 2A 1D 03 54 1D 1C 60 3E A7 FF F3 84 02 01 A7 FF DC B1
+3d          // istore_2
+1c          // iload_2
+1b          // iload_1
+a3 00 0d    // if_icmpgt 0x000d
+2a          // aload_0
+1c          // iload_2
+04          // iconst_1
+54          // bastore
+84 02 01    // iinc 2, 1
+a7 ff f4    // goto 0xfff4
+05          // iconst_2
+3d          // istore_2
+1c          // iload_2
+1c          // iload_2
+68          // imul
+1b          // iload_1
+a3 00 23    // if_icmpgt 0x0023
+2a          // aload_0
+1c          // iload_2
+33          // baload
+99 00 17    // ifeq 0x0017
+1c          // iload_2
+1c          // iload_2
+68          // imul
+3e          // istore_3
+1d          // iload_3
+1b          // iload_1
+a3 00 0e    // if_icmpgt 0x000e
+2a          // aload_0
+1d          // iload_3
+03          // iconst_0
+54          // bastore
+1d          // iload_3
+1c          // iload_2
+60          // iadd
+3e          // istore_3
+a7 ff f3    // goto 0xfff3
+84 02 01    // iinc 2 1
+a7 ff dc    // goto 0xffdc
+b1          // return

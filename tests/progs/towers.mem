@@ -7,7 +7,7 @@
 10 43       // bipush 0x43
 10 42       // bipush 0x42
 b8 00 01    // invokestatic 0x0001
-00          // nop (main function returns)
+00          // nop (main returns)
 1a          // iload_0
 04          // iconst_1
 a0 00 04    // if_icmpne 0x0004
