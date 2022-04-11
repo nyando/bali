@@ -19,7 +19,7 @@ module uart_tx(
     logic tx_done;      // assigned to "done" output; set to HI for one clock cycle when transmission is done
     logic [7:0] value;  // byte value to transmit
     logic [1:0] state;  // internal representation of FSM state
-    logic [7:0] cycles; // counter for number of cycles per transmitted bit
+    logic [15:0] cycles; // counter for number of cycles per transmitted bit
     logic [2:0] index;  // counter for bit index to transmit
     
     initial begin

@@ -10,13 +10,6 @@ module bali(
     
     logic divclk;
 
-    clkdiv #(
-        .CLKDIV_FACTOR(100)
-    ) clkdiv_instance (
-        .clk(clk),
-        .divclk(divclk)
-    );
-
     logic [7:0] opcode;
     logic [7:0] arg1;
     logic [7:0] arg2;
@@ -29,9 +22,9 @@ module bali(
     logic [7:0] rxout;
 
     uart_rx #(
-        .CYCLES_PER_BIT(104)
+        .CYCLES_PER_BIT(10400)
     ) bali_uart_rx (
-        .clk(divclk),
+        .clk(clk),
         .rx(rx),
         .done(rxdone),
         .out(rxout)
@@ -42,9 +35,9 @@ module bali(
     logic txdone;
 
     uart_tx #(
-        .CYCLES_PER_BIT(104)
+        .CYCLES_PER_BIT(10400)
     ) bali_uart_tx (
-        .clk(divclk),
+        .clk(clk),
         .in(txin),
         .send(txsend),
         .tx(tx),
@@ -82,11 +75,13 @@ module bali(
     );
 
     logic rwstate;
+    logic [31:0] cycles;
 
     always @ (posedge clk) begin
         if (rst) begin
             rwstate <= 0;
             progmemaddr <= 8'h00;
+            cycles <= 32'h0000_0000;
         end
 
         if (rwstate) begin

@@ -18,7 +18,7 @@ module uart_rx (
     logic [7:0] value;  // assigned to "out" output; accumulator for received byte value
     logic rx_done;      // assigned to "done" output; set to HI for one cycle when byte received
     logic [1:0] state;  // internal representation of FSM state
-    logic [7:0] cycles; // counter for clock cycles per received bit
+    logic [15:0] cycles; // counter for clock cycles per received bit
     logic [2:0] index;  // counter for bit indices received
 
     initial begin
