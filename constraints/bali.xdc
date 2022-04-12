@@ -14,12 +14,15 @@ set_property -dict {PACKAGE_PIN D10 IOSTANDARD LVCMOS33} [get_ports {tx}]
 # reset button
 set_property -dict {PACKAGE_PIN D9 IOSTANDARD LVCMOS33} [get_ports {rst}]; 
 
+# executing LED
+set_property -dict { PACKAGE_PIN G6 IOSTANDARD LVCMOS33 } [get_ports { executing }];
+
 # LEDs to indicate current progmem address
-set_property -dict {PACKAGE_PIN H5 IOSTANDARD LVCMOS33} [get_ports {addr[0]}]
-set_property -dict {PACKAGE_PIN J5 IOSTANDARD LVCMOS33} [get_ports {addr[1]}]
-set_property -dict {PACKAGE_PIN T9 IOSTANDARD LVCMOS33} [get_ports {addr[2]}]
-set_property -dict {PACKAGE_PIN T10 IOSTANDARD LVCMOS33} [get_ports {addr[3]}]
-set_property -dict {PACKAGE_PIN F6 IOSTANDARD LVCMOS33} [get_ports {addr[4]}]
-set_property -dict {PACKAGE_PIN J4 IOSTANDARD LVCMOS33} [get_ports {addr[5]}]
-set_property -dict {PACKAGE_PIN J2 IOSTANDARD LVCMOS33} [get_ports {addr[6]}]
-set_property -dict {PACKAGE_PIN H6 IOSTANDARD LVCMOS33} [get_ports {addr[7]}]
+#set_property -dict {PACKAGE_PIN H5 IOSTANDARD LVCMOS33} [get_ports {addr[0]}]
+#set_property -dict {PACKAGE_PIN J5 IOSTANDARD LVCMOS33} [get_ports {addr[1]}]
+#set_property -dict {PACKAGE_PIN T9 IOSTANDARD LVCMOS33} [get_ports {addr[2]}]
+#set_property -dict {PACKAGE_PIN T10 IOSTANDARD LVCMOS33} [get_ports {addr[3]}]
+#set_property -dict {PACKAGE_PIN F6 IOSTANDARD LVCMOS33} [get_ports {addr[4]}]
+#set_property -dict {PACKAGE_PIN J4 IOSTANDARD LVCMOS33} [get_ports {addr[5]}]
+#set_property -dict {PACKAGE_PIN J2 IOSTANDARD LVCMOS33} [get_ports {addr[6]}]
+#set_property -dict {PACKAGE_PIN H6 IOSTANDARD LVCMOS33} [get_ports {addr[7]}]

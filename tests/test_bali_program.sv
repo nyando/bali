@@ -18,6 +18,7 @@ module test_bali_program();
     logic rx;
     logic tx;
     logic [7:0] addr;
+    logic exec;
 
     sim_clk clock(
         .clk(clk)
@@ -28,7 +29,7 @@ module test_bali_program();
         .rst(rst),
         .rx(rx),
         .tx(tx),
-        .addr(addr)
+        .executing(exec)
     );
 
     initial begin
@@ -38,12 +39,22 @@ module test_bali_program();
         rst = 1;
         #1;
         rst = 0;
+        send_u8(8'h07, 10400, rx);
+        #1000;
         send_u8(8'h00, 10400, rx);
         #1000;
-        send_u8(8'h01, 10400, rx);
+        send_u8(8'h04, 10400, rx);
+        #1000;
+        send_u8(8'h00, 10400, rx);
         #1000;
         send_u8(8'h02, 10400, rx);
         #1000;
+        send_u8(8'h06, 10400, rx);
+        #1000;
+        send_u8(8'h3c, 10400, rx);
+        #1000;
+        send_u8(8'hff, 10400, rx);
+        #1000000;
         $finish;
     end
 

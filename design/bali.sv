@@ -5,11 +5,10 @@ module bali(
     input rst,
     input rx,
     output tx,
-    output [7:0] addr
+    //output [7:0] addr,
+    output executing
 );
     
-    logic divclk;
-
     logic [7:0] opcode;
     logic [7:0] arg1;
     logic [7:0] arg2;
@@ -63,9 +62,11 @@ module bali(
         .arg2(arg2)
     );
 
+    logic cpurst;
+
     cpu bali_cpu (
         .clk(clk),
-        .rst(rst),
+        .rst(cpurst),
         .op_code(opcode),
         .arg1(arg1),
         .arg2(arg2),
@@ -74,14 +75,147 @@ module bali(
         .program_counter(pc)
     );
 
-    logic rwstate;
+    logic [1:0] state;
+    const logic [1:0] IDLE     = 2'b00;
+    const logic [1:0] LOADPROG = 2'b01;
+    const logic [1:0] EXECUTE  = 2'b10;
+    const logic [1:0] DONE     = 2'b11;
+
+    logic [7:0] proglength;
+
     logic [31:0] cycles;
+    logic rwstate;
+    logic [1:0] bytecount;
 
     always @ (posedge clk) begin
+        if (cpurst) begin
+            cpurst <= 0;
+        end
+
+        if (rst) begin
+            state <= IDLE;
+            progmemaddr <= 8'h00;
+            cpurst <= 1;
+        end
+
+        case (state)
+            IDLE: begin
+                txsend <= 0;
+                state <= IDLE;
+                if (rxdone) begin
+                    proglength <= rxout;
+                    txin <= rxout;
+                    txsend <= 1;
+                    state <= LOADPROG;
+                end
+            end
+            LOADPROG: begin
+                txsend <= 0;
+                if (progmemaddr == proglength) begin
+                    cycles <= 32'h0000_0000;
+                    cpurst <= 1;
+                    if (txdone) begin
+                        state <= EXECUTE;
+                    end
+                end
+                if (rwstate) begin
+                    rwstate <= 0;
+                    progwrite <= 0;
+                    progmemaddr <= progmemaddr + 1;
+                    txsend <= 0;
+                end
+                if (rxdone) begin
+                    rwstate <= 1;
+                    progwrite <= 1;
+                    progmemvalue <= rxout;
+                    txin <= progmemaddr;
+                    txsend <= 1;
+                end
+            end
+            EXECUTE: begin
+                if (opcode == 8'hff) begin
+                    state <= DONE;
+                    txin <= cycles[7:0];
+                    bytecount <= 2'b01;
+                    txsend <= 1;
+                end
+                cpurst <= 0;
+                cycles <= cycles + 1;
+            end
+            DONE: begin
+                txsend <= 0;
+                if (txdone) begin
+                    case (bytecount)
+                        2'b01: begin
+                            txin <= cycles[15:8];
+                            txsend <= 1;
+                        end
+                        2'b10: begin
+                            txin <= cycles[23:16];
+                            txsend <= 1;
+                        end
+                        2'b11: begin
+                            txin <= cycles[31:24];
+                            txsend <= 1;
+                            state <= IDLE;
+                        end
+                        default: begin end
+                    endcase
+                    bytecount <= bytecount + 1;
+                end
+            end
+            default: begin end
+        endcase
+    end
+
+    /*always @ (posedge clk) begin
+        if (cpurst) begin
+            cycles <= 32'h0000_0000;
+            executing <= 1;
+            sending <= 0;
+        end
+
+        if (opcode != 8'h00) begin
+            cycles <= cycles + 1;
+        end
+        else begin
+            if (executing) begin
+                executing <= 0;
+                sending <= 1;
+                txin <= cycles[7:0];
+                bytecount <= 2'b01;
+                txsend <= 1;
+            end
+        end
+
+        if (sending) begin
+            txsend <= 0;
+            if (txdone) begin
+                case (bytecount)
+                    2'b01: begin
+                        txin <= cycles[15:8];
+                        txsend <= 1;
+                    end
+                    2'b10: begin
+                        txin <= cycles[23:16];
+                        txsend <= 1;
+                    end
+                    2'b11: begin
+                        txin <= cycles[31:24];
+                        txsend <= 1;
+                        sending <= 0;
+                    end
+                    default: begin
+                    end
+                endcase
+                bytecount <= bytecount + 1;
+            end
+        end
+
         if (rst) begin
             rwstate <= 0;
             progmemaddr <= 8'h00;
-            cycles <= 32'h0000_0000;
+            executing <= 0;
         end
 
         if (rwstate) begin
@@ -98,8 +232,9 @@ module bali(
             txin <= progmemaddr;
             txsend <= 1;
         end
-    end
+    end*/
 
-    assign addr = progmemaddr;
+    //assign addr = progmemaddr;
+    assign executing = state[1];
 
 endmodule

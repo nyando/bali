@@ -275,6 +275,7 @@ module cpu(
         end     
         
         if (rst) begin
+            pc <= 16'h0000;
             data_index <= 16'h0000;
             lvaoffset <= 8'h00;
             lvamax <= 8'h00;
