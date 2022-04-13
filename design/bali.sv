@@ -5,7 +5,6 @@ module bali(
     input rst,
     input rx,
     output tx,
-    //output [7:0] addr,
     output executing
 );
     
@@ -168,73 +167,6 @@ module bali(
         endcase
     end
 
-    /*always @ (posedge clk) begin
-        if (cpurst) begin
-            cycles <= 32'h0000_0000;
-            executing <= 1;
-            sending <= 0;
-        end
-
-        if (opcode != 8'h00) begin
-            cycles <= cycles + 1;
-        end
-        else begin
-            if (executing) begin
-                executing <= 0;
-                sending <= 1;
-                txin <= cycles[7:0];
-                bytecount <= 2'b01;
-                txsend <= 1;
-            end
-        end
-
-        if (sending) begin
-            txsend <= 0;
-            if (txdone) begin
-                case (bytecount)
-                    2'b01: begin
-                        txin <= cycles[15:8];
-                        txsend <= 1;
-                    end
-                    2'b10: begin
-                        txin <= cycles[23:16];
-                        txsend <= 1;
-                    end
-                    2'b11: begin
-                        txin <= cycles[31:24];
-                        txsend <= 1;
-                        sending <= 0;
-                    end
-                    default: begin
-                    end
-                endcase
-                bytecount <= bytecount + 1;
-            end
-        end
-
-        if (rst) begin
-            rwstate <= 0;
-            progmemaddr <= 8'h00;
-            executing <= 0;
-        end
-
-        if (rwstate) begin
-            rwstate <= 0;
-            progwrite <= 0;
-            progmemaddr <= progmemaddr + 1;
-            txsend <= 0;
-        end
-        
-        if (rxdone) begin
-            rwstate <= 1;
-            progwrite <= 1;
-            progmemvalue <= rxout;
-            txin <= progmemaddr;
-            txsend <= 1;
-        end
-    end*/
-
-    //assign addr = progmemaddr;
     assign executing = state[1];
 
 endmodule

@@ -5,6 +5,7 @@ module arrayblock #(
     localparam ADDR = $clog2(ARR_SIZE)
 ) (
     input clk,
+    input rst,
     input write,
     input trigger,
     input [ADDR - 1:0] addr,
@@ -33,6 +34,10 @@ module arrayblock #(
     logic is_done;
 
     always @ (posedge clk) begin
+        if (rst) begin
+            state <= IDLE;
+        end
+
         case (state)
             IDLE: begin
                 is_done <= 0;

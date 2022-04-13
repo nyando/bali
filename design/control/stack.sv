@@ -5,6 +5,7 @@ module stack #(
     parameter STACKSIZE = 65_536
 ) (
     input clk,
+    input rst,
     input push,
     input trigger,
     input [STACKDATA - 1:0] write_value,
@@ -45,6 +46,15 @@ module stack #(
     end
 
     always @ (posedge clk) begin
+
+        if (rst) begin
+            state <= IDLE;
+            addr <= 16'h0000;
+            top_of_stack <= 16'h0000;
+            word_in <= 32'h0000_0000;
+            writing <= 0;
+            done <= 0;
+        end
 
         case (state)
             IDLE: begin

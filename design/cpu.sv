@@ -24,6 +24,7 @@ module cpu(
         .ARR_SIZE(256)
     ) staticarray (
         .clk(clk),
+        .rst(rst),
         .write(arrwrite),
         .trigger(arrtrigger),
         .addr(arraddr),
@@ -44,6 +45,7 @@ module cpu(
         .ARR_SIZE(256)
     ) localvars (
         .clk(clk),
+        .rst(rst),
         .write(lvawrite),
         .trigger(lvatrigger),
         .addr(lvaaddr),
@@ -75,6 +77,7 @@ module cpu(
     // control unit executes the code within a method
     control control_unit (
         .clk(clk),
+        .rst(rst),
         .op_code(op_code),
         .arg1(arg1),
         .arg2(arg2),
@@ -114,6 +117,7 @@ module cpu(
         .STACKSIZE(32)
     ) callstack (
         .clk(clk),
+        .rst(rst),
         .push(callpush),
         .trigger(calltrigger),
         .write_value(callwrite),
@@ -127,6 +131,7 @@ module cpu(
         .STACKSIZE(32)
     ) eval_stack (
         .clk(clk),
+        .rst(rst),
         .push(evalpush),
         .trigger(evaltrigger),
         .write_value(evalwrite),

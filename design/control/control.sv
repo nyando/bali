@@ -5,6 +5,7 @@
 
 module control(
     input clk,
+    input rst,
     input [7:0] op_code,            // current opcode to execute
     input [7:0] arg1,               // first argument to opcode (pc + 1)
     input [7:0] arg2,               // second argument to opcode (pc + 2)
@@ -164,6 +165,36 @@ module control(
     end
 
     always @ (posedge clk) begin
+        if (rst) begin
+            state <= IDLE;
+
+            pc_offset <= 16'h0000;
+            compvalue <= 32'h0000_0000;
+            jump <= 0;
+
+            operand_a <= 32'h0000_0000;
+            operand_b <= 32'h0000_0000;
+
+            lvamove_state <= LVAMOVE_IDLE;
+            lvamove_done <= 0;
+
+            arr_op <= 0;
+            arr_addr <= 16'h0000;
+            arr_write <= 32'h0000_0000;
+            arr_trigger <= 0;
+            
+            lva_op <= 0;
+            lva_index <= 16'h0000;
+            lva_write <= 32'h0000_0000;
+            lva_trigger <= 0;
+
+            stack_push <= 0;
+            stack_write <= 32'h0000_0000;
+            stack_trigger <= 0;
+
+            fetch_wait <= FETCH_WAIT;
+        end
+
         // ---- STACK TO LVA MOVE SECTION ----
         if (lvamove) begin
             lvamove_state <= LVAMOVE_STACKLOAD;
