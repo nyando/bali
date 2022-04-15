@@ -46,12 +46,12 @@ module control(
     logic iscmp;                    // operation is a conditional jump
     logic [3:0] cmptype;            // differentiates EQ/NE/LT/LE/GE/GT
     logic isconstpush;              // operation pushes constant to stack
-    logic [31:0] constval;          // value of constant to push to stack
+    logic [2:0] constval;           // value of constant to push to stack
     logic isargpush;                // operation pushes byte or short literal to stack
     logic isgoto;                   // operation is unconditional jump
     logic islvaread;                // operation reads from LVA
     logic islvawrite;               // operation writes to LVA
-    logic [7:0] lvadecodedindex;    // index of local variable to read from or write to
+    logic [1:0] lvadecodedindex;    // index of local variable to read from or write to
     logic isnewarray;               // operation creates a new array reference
     logic isarrread;                // operation reads from static array
     logic isarrwrite;               // operation writes to static array
@@ -283,7 +283,7 @@ module control(
                         lva_index <= arg1;
                     end
                     else begin
-                        lva_index <= lvadecodedindex;
+                        lva_index <= { { 6 { 1'b0 } }, lvadecodedindex };
                     end
                     if (islvaread) begin
                         lva_op <= 0;
@@ -508,7 +508,12 @@ module control(
             EXEC: begin
                 // push constant to stack
                 if (isconstpush) begin
-                    stack_write[31:0] <= constval[31:0];
+                    if (constval[2:0] == 3'b111) begin
+                        stack_write[31:0] <= 32'hffff_ffff;
+                    end
+                    else begin
+                        stack_write[31:0] <= { { 29 { 1'b0 } }, constval[2:0] };
+                    end
                 end
                 // write alu operation result to stack
                 if (isaluop) begin

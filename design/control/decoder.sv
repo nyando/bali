@@ -11,11 +11,11 @@ module decoder(
     output [3:0] cmptype,
     output isargpush,
     output isconstpush,
-    output [31:0] constval,
+    output [2:0] constval,
     output isgoto,
     output islvaread,
     output islvawrite,
-    output [7:0] lvaindex,
+    output [1:0] lvaindex,
     output isnewarray,
     output isarrread,
     output isarrwrite,
@@ -38,7 +38,7 @@ module decoder(
     logic is_goto;
     logic is_lvaread;
     logic is_lvawrite;
-    logic [7:0] lva_index;
+    logic [1:0] lva_index;
     logic is_newarray;
     logic is_arrread;
     logic is_arrwrite;
@@ -60,7 +60,7 @@ module decoder(
         is_goto <= 0;
         is_lvaread <= 0;
         is_lvawrite <= 0;
-        lva_index <= 8'h00;
+        lva_index <= 2'b00;
         is_newarray <= 0;
         is_arrread <= 0;
         is_arrwrite <= 0;
@@ -72,7 +72,7 @@ module decoder(
         stack_args <= 2'b00;
         stack_wb <= 0;
         is_constpush <= 0;
-        const_val <= 32'h0000_0000;
+        const_val <= 3'b000;
 
         casez (opcode)
             NOP: begin
@@ -85,31 +85,31 @@ module decoder(
                 case (opcode[3:0])
                     4'h2: begin
                         // push -1
-                        const_val <= 32'hffff_ffff;
+                        const_val <= 3'b111;
                     end
                     4'h3: begin
                         // push 0
-                        const_val <= 32'h0000_0000;
+                        const_val <= 3'b000;
                     end
                     4'h4: begin
                         // push 1
-                        const_val <= 32'h0000_0001;
+                        const_val <= 3'b001;
                     end
                     4'h5: begin
                         // push 2
-                        const_val <= 32'h0000_0002;
+                        const_val <= 3'b010;
                     end
                     4'h6: begin
                         // push 3
-                        const_val <= 32'h0000_0003;
+                        const_val <= 3'b011;
                     end
                     4'h7: begin
                         // push 4
-                        const_val <= 32'h0000_0004;
+                        const_val <= 3'b100;
                     end
                     4'h8: begin
                         // push 5
-                        const_val <= 32'h0000_0005;
+                        const_val <= 3'b101;
                     end
                     default: begin end
                 endcase
@@ -150,16 +150,16 @@ module decoder(
                 is_lvaread <= 1;
                 case (opcode[3:0])
                     4'ha: begin
-                        lva_index <= 8'h00;
+                        lva_index <= 2'b00;
                     end
                     4'hb: begin
-                        lva_index <= 8'h01;
+                        lva_index <= 2'b01;
                     end
                     4'hc: begin
-                        lva_index <= 8'h02;
+                        lva_index <= 2'b10;
                     end
                     4'hd: begin
-                        lva_index <= 8'h03;
+                        lva_index <= 2'b11;
                     end
                     default: begin end
                 endcase
@@ -179,16 +179,16 @@ module decoder(
                 is_lvaread <= 1;
                 case (opcode[3:0])
                     4'ha: begin
-                        lva_index <= 8'h00;
+                        lva_index <= 2'b00;
                     end
                     4'hb: begin
-                        lva_index <= 8'h01;
+                        lva_index <= 2'b01;
                     end
                     4'hc: begin
-                        lva_index <= 8'h02;
+                        lva_index <= 2'b10;
                     end
                     4'hd: begin
-                        lva_index <= 8'h03;
+                        lva_index <= 2'b11;
                     end
                     default: begin end
                 endcase
@@ -214,19 +214,19 @@ module decoder(
                 is_lvawrite <= 1;
                 case (opcode[3:0])
                     4'hb: begin
-                        lva_index <= 8'h00;
+                        lva_index <= 2'b00;
                     end
                     4'hc: begin
                         // store 1
-                        lva_index <= 8'h01;
+                        lva_index <= 2'b01;
                     end
                     4'hd: begin
                         // store 2
-                        lva_index <= 8'h02;
+                        lva_index <= 2'b10;
                     end
                     4'he: begin
                         // store 3
-                        lva_index <= 8'h03;
+                        lva_index <= 2'b11;
                     end
                     default: begin end
                 endcase
@@ -246,16 +246,16 @@ module decoder(
                 is_lvawrite <= 1;
                 case (opcode[3:0])
                     4'hb: begin
-                        lva_index <= 8'h00;
+                        lva_index <= 2'b00;
                     end
                     4'hc: begin
-                        lva_index <= 8'h01;
+                        lva_index <= 2'b01;
                     end
                     4'hd: begin
-                        lva_index <= 8'h02;
+                        lva_index <= 2'b10;
                     end
                     4'he: begin
-                        lva_index <= 8'h03;
+                        lva_index <= 2'b11;
                     end
                     default: begin end
                 endcase
