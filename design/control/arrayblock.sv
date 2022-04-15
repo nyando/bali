@@ -30,12 +30,11 @@ module arrayblock #(
         .data_out(read_out)
     );
 
+    logic [1:0] state;
     const logic [1:0] IDLE  = 2'b00;
     const logic [1:0] READ  = 2'b01;
     const logic [1:0] WRITE = 2'b10;
-    const logic [1:0] OUT   = 2'b11;
 
-    logic [1:0] state;
     logic is_done;
 
     always @ (posedge clk) begin

@@ -8,20 +8,15 @@ module stack #(
     input rst,
     input push,
     input trigger,
-    input [STACKDATA - 1:0] write_value,
-    output [STACKDATA - 1:0] read_value,
-    output done_out
+    input [STACKDATA - 1:0] writevalue,
+    output [STACKDATA - 1:0] readvalue,
+    output done
 );
 
-    logic [31:0] read;
+    logic writing;
     logic [31:0] word_in;
-    logic done;
-
-    logic [1:0] state;
-    logic [15:0] top_of_stack;
     logic [31:0] word_out;
     logic [15:0] addr;
-    logic writing;
 
     block_ram #(
         .DATA(STACKDATA),
@@ -34,16 +29,13 @@ module stack #(
         .data_out(word_out)
     );
 
+    logic [15:0] top_of_stack;
+    
+    logic [1:0] state;
     const logic [1:0] IDLE  = 2'b00;
     const logic [1:0] WRITE = 2'b01;
     const logic [1:0] READ  = 2'b10;
-
-    initial begin
-        top_of_stack <= 0;
-        state <= IDLE;
-        writing <= 0;
-        done <= 0;
-    end
+    logic is_done;
 
     always @ (posedge clk) begin
 
@@ -53,23 +45,23 @@ module stack #(
             top_of_stack <= 16'h0000;
             word_in <= 32'h0000_0000;
             writing <= 0;
-            done <= 0;
+            is_done <= 0;
         end
 
         case (state)
             IDLE: begin
                 writing <= 0;
-                done <= 0;
+                is_done <= 0;
             end
             WRITE: begin
                 top_of_stack <= top_of_stack + 1;
                 state <= IDLE;
-                done <= 1;
+                is_done <= 1;
             end
             READ: begin
                 top_of_stack <= top_of_stack - 1;
                 state <= IDLE;
-                done <= 1;
+                is_done <= 1;
             end
             default: begin end
         endcase
@@ -78,7 +70,7 @@ module stack #(
             if (push) begin
                 writing <= 1;
                 state <= WRITE;
-                word_in <= write_value;
+                word_in <= writevalue;
                 addr <= top_of_stack;
             end
             else begin
@@ -90,7 +82,7 @@ module stack #(
 
     end
     
-    assign read_value[STACKDATA - 1:0] = word_out[STACKDATA - 1:0];
-    assign done_out = done;
+    assign readvalue[STACKDATA - 1:0] = word_out[STACKDATA - 1:0];
+    assign done = is_done;
 
 endmodule

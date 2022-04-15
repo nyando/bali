@@ -158,12 +158,6 @@ module control(
     const logic [2:0] LVAMOVE_WAIT      = 3'b100;
     logic lvamove_done;
 
-    initial begin
-        state <= IDLE;
-        stack_trigger <= 0;
-        fetch_wait <= FETCH_WAIT;
-    end
-
     always @ (posedge clk) begin
         if (rst) begin
             state <= IDLE;

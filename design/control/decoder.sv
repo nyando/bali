@@ -50,30 +50,6 @@ module decoder(
     logic [1:0] stack_args;
     logic stack_wb;
 
-    initial begin
-        alu_op <= 4'h0;
-        is_aluop <= 0;
-        is_cmp <= 0;
-        cmp_type <= 0;
-        is_argpush <= 0;
-        is_goto <= 0;
-        is_lvaread <= 0;
-        is_lvawrite <= 0;
-        lva_index <= 8'h00;
-        is_newarray <= 0;
-        is_arrread <= 0;
-        is_arrwrite <= 0;
-        is_pop <= 0;
-        is_dup <= 0;
-        is_ldc <= 0;
-        is_iinc <= 0;
-        arg_c <= 2'b00;
-        stack_args <= 2'b00;
-        stack_wb <= 0;
-        is_constpush <= 0;
-        const_val <= 32'h0000_0000;
-    end
-
     always @ (opcode) begin
         // initialize default values for each output
         alu_op <= 4'h0;

@@ -120,9 +120,9 @@ module cpu(
         .rst(rst),
         .push(callpush),
         .trigger(calltrigger),
-        .write_value(callwrite),
-        .read_value(callread),
-        .done_out(calldone)
+        .writevalue(callwrite),
+        .readvalue(callread),
+        .done(calldone)
     );
 
     // method eval stack instance
@@ -134,9 +134,9 @@ module cpu(
         .rst(rst),
         .push(evalpush),
         .trigger(evaltrigger),
-        .write_value(evalwrite),
-        .read_value(evalread),
-        .done_out(evaldone)
+        .writevalue(evalwrite),
+        .readvalue(evalread),
+        .done(evaldone)
     );
     
     // procedure for method invocation:
@@ -166,10 +166,6 @@ module cpu(
     logic [7:0] argcount;           // number of arguments of invoked method (i. e. number of elements to transfer from stack to LVA)
     logic [7:0] lvamax;             // maximum number of local variables of invoked method, argcount <= lvamax
     logic [7:0] lvamax_caller;      // maximum number of local variables of calling method
-
-    initial begin
-        pc <= 8'h00;
-    end
 
     always @ (posedge clk) begin
         if (opdone) begin
