@@ -379,7 +379,7 @@ module decoder(
                 stack_wb <= 1;
             end
             /* IFCOND, IF_ICMPCOND (3 byte) */ 8'b10??????: begin
-                if (opcode >= 4'h99 || opcode <= 4'ha4) begin
+                if (opcode >= 8'h99 || opcode <= 8'ha4) begin
                     case (opcode[3:0])
                         4'h9: begin
                             // IFEQ
