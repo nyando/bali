@@ -75,32 +75,6 @@ module arrayblock #(
                 state <= READ;
             end
         end
-        /*case (state)
-            IDLE: begin
-                is_done <= 0;
-                if (trigger) begin
-                    if (write) begin
-                        state <= WRITE;
-                    end
-                    else begin
-                        state <= READ;
-                    end
-                end
-            end
-            READ: begin
-                state <= OUT;
-            end
-            WRITE: begin
-                state <= OUT;
-            end
-            OUT: begin
-                is_done <= 1;
-                state <= IDLE;
-            end
-            default: begin
-                state <= IDLE;
-            end
-        endcase*/
     end
 
     assign readvalue[31:0] = read_out[31:0];
