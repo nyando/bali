@@ -55,7 +55,7 @@ module decoder(
         alu_op <= 4'h0;
         is_aluop <= 0;
         is_cmp <= 0;
-        cmp_type <= 0;
+        cmp_type <= 4'h0;
         is_argpush <= 0;
         is_goto <= 0;
         is_lvaread <= 0;
@@ -141,8 +141,6 @@ module decoder(
                     4'hd: begin lva_index <= 2'b11; end // lva index 3
                     default: begin end
                 endcase
-                arg_c <= 2'b00;
-                stack_args <= 2'b00;
                 stack_wb <= 1;
             end
             BALOAD: begin
@@ -256,37 +254,31 @@ module decoder(
                         4'h9: begin
                             // IFEQ
                             stack_args <= 2'b01;
-                            cmp_type[3] <= 0;
                             cmp_type[2:0] <= EQ;
                         end
                         4'ha: begin
                             // IFNE
                             stack_args <= 2'b01;
-                            cmp_type[3] <= 0;
                             cmp_type[2:0] <= NE;
                         end
                         4'hb: begin
                             // IFLT
                             stack_args <= 2'b01;
-                            cmp_type[3] <= 0;
                             cmp_type[2:0] <= LT;
                         end
                         4'hc: begin
                             // IFGE
                             stack_args <= 2'b01;
-                            cmp_type[3] <= 0;
                             cmp_type[2:0] <= GE;
                         end
                         4'hd: begin
                             // IFGT
                             stack_args <= 2'b01;
-                            cmp_type[3] <= 0;
                             cmp_type[2:0] <= GT;
                         end
                         4'he: begin
                             // IFLE
                             stack_args <= 2'b01;
-                            cmp_type[3] <= 0;
                             cmp_type[2:0] <= LE;
                         end
                         4'hf: begin
