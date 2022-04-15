@@ -1,4 +1,4 @@
-`include "control/headers/opcodes.vh"
+`include "headers/opcodes.vh"
 
 `timescale 10ns / 10ns
 

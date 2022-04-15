@@ -39,6 +39,7 @@ module test_stack();
         .STACKSIZE(16)
     ) stack_instance(
         .clk(clk),
+        .rst(),
         .push(push),
         .trigger(trigger),
         .write_value(data_in),
