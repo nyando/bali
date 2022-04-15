@@ -4,7 +4,7 @@ module alu(
     input [31:0] operand_a,
     input [31:0] operand_b,
     input [3:0] op_select,
-    output logic [31:0] result,
+    output logic [31:0] result
 );
 
     const logic [3:0] IADD = 4'b0000;

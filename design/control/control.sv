@@ -264,7 +264,7 @@ module control(
                     state <= EXEC;
                 end
                 // alu operation or comparison
-                if (isaluop || iscmp || ispop || isdup) begin
+                if (isaluop || iscmp || ispop || isdup || islvawrite || isnewarray || isarrread || isarrwrite) begin
                     stack_push <= 0;
                     stack_trigger <= 1;
                     stackarg_counter <= stackarg_counter - 1;
@@ -275,35 +275,18 @@ module control(
                     jump <= 1;
                 end
                 // local variable load
-                if (islvaread || islvawrite) begin
+                if (islvaread || islvawrite || islvainc) begin
                     // LVA index is argument of opcode
-                    if (argc == 2'b01) begin
+                    if (argc > 2'b00) begin
                         lva_index <= arg1;
                     end
                     else begin
                         lva_index <= { { 6 { 1'b0 } }, lvadecodedindex };
                     end
-                    if (islvaread) begin
+                    if (islvaread || islvainc) begin
                         lva_op <= 0;
                         state <= LVA_START;
                     end
-                    if (islvawrite) begin
-                        stack_push <= 0;
-                        stack_trigger <= 1;
-                        stackarg_counter <= stackarg_counter - 1;
-                        state <= S_LOAD;
-                    end
-                end
-                if (islvainc) begin
-                    lva_op <= 0;
-                    lva_index <= arg1;
-                    state <= LVA_START;
-                end
-                if (isnewarray || isarrread || isarrwrite) begin
-                    stack_push <= 0;
-                    stack_trigger <= 1;
-                    stackarg_counter <= stackarg_counter - 1;
-                    state <= S_LOAD;
                 end
             end
             S_LOAD: begin
