@@ -4,8 +4,7 @@ module alu(
     input [31:0] operand_a,
     input [31:0] operand_b,
     input [3:0] op_select,
-    output logic [31:0] result_lo,
-    output logic [31:0] result_hi
+    output logic [31:0] result,
 );
 
     const logic [3:0] IADD = 4'b0000;
@@ -25,51 +24,50 @@ module alu(
             case (op_select)
                 // iadd: add two integers
                 IADD: begin
-                    result_lo = operand_a + operand_b;
+                    result = operand_a + operand_b;
                 end
                 // isub: subtract two integers
                 ISUB: begin
-                    result_lo = operand_a - operand_b;
+                    result = operand_a - operand_b;
                 end
                 // imul: multiply two integers
                 IMUL: begin
-                    result_lo = operand_a[15:0] * operand_b[15:0];
+                    result = operand_a[15:0] * operand_b[15:0];
                 end
                 // idiv: divide two integers
                 IDIV: begin
-                    result_lo = operand_a[15:0] / operand_b[15:0];
+                    result = operand_a[15:0] / operand_b[15:0];
                 end
                 // irem: modulo of two integers
                 IREM: begin
-                    result_lo = operand_a[15:0] % operand_b[15:0];
+                    result = operand_a[15:0] % operand_b[15:0];
                 end
                 // iand: bitwise AND of two integers
                 IAND: begin
-                    result_lo = operand_a & operand_b;
+                    result = operand_a & operand_b;
                 end
                 // ior: bitwise OR of two integers
                 IOR: begin
-                    result_lo = operand_a | operand_b;
+                    result = operand_a | operand_b;
                 end
                 // ixor: bitwise XOR of two integers
                 IXOR: begin
-                    result_lo = operand_a ^ operand_b;
+                    result = operand_a ^ operand_b;
                 end
                 // ineg: bitwise negation of two integers
                 INEG: begin
-                    result_lo = ~operand_a;
+                    result = ~operand_a;
                 end
                 // ishl: shift integer left
                 ISHL: begin
-                    result_lo = operand_a << (operand_b & 32'h0000_001f);
+                    result = operand_a << (operand_b & 32'h0000_001f);
                 end
                 // ishr: shift integer right
                 ISHR: begin
-                    result_lo = operand_a >> (operand_b & 32'h0000_001f);
+                    result = operand_a >> (operand_b & 32'h0000_001f);
                 end
                 default: begin
-                    result_lo = 32'hXXXX;
-                    result_hi = 32'hXXXX;
+                    result = 32'hXXXX;
                 end
             endcase
         end

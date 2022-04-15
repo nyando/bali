@@ -36,7 +36,6 @@ module uart_calc(
     logic [31:0] a, b;
     logic [3:0] op;
     logic [31:0] lo;
-    logic [31:0] hi;
     logic op_done;
 
     initial begin
@@ -77,8 +76,7 @@ module uart_calc(
         .operand_a(a),
         .operand_b(b),
         .op_select(op),
-        .result_lo(lo),
-        .result_hi(hi)
+        .result(lo)
     );
 
     // begin UART TX output logic

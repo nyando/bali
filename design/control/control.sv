@@ -91,15 +91,13 @@ module control(
     // ALU integration
     logic [31:0] operand_a;         // first operand of ALU operation
     logic [31:0] operand_b;         // second operand of ALU operation (if binary operation)
-    logic [31:0] result_lo;         // low 32 bits of ALU result
-    logic [31:0] result_hi;         // high 32 bits of ALU result (if they exist)
+    logic [31:0] result;         // low 32 bits of ALU result
     
     alu alu (
         .operand_a(operand_a),
         .operand_b(operand_b),
         .op_select(aluop),
-        .result_lo(result_lo),
-        .result_hi(result_hi)
+        .result(result)
     );
 
     logic [1:0] stackarg_counter;   // number of arguments to pop from the stack
@@ -517,7 +515,7 @@ module control(
                 end
                 // write alu operation result to stack
                 if (isaluop) begin
-                    stack_write[31:0] <= result_lo[31:0];
+                    stack_write[31:0] <= result[31:0];
                 end
                 // push byte or short literal to stack
                 if (isargpush) begin
