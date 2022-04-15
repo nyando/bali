@@ -42,9 +42,9 @@ module test_stack();
         .rst(),
         .push(push),
         .trigger(trigger),
-        .write_value(data_in),
-        .read_value(data_out),
-        .done_out(done_out)
+        .writevalue(data_in),
+        .readvalue(data_out),
+        .done(done_out)
     );
 
     initial begin
