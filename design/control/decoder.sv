@@ -75,102 +75,59 @@ module decoder(
         const_val <= 3'b000;
 
         casez (opcode)
-            NOP: begin
-                // NOP
-                arg_c <= 2'b00;
-                stack_args <= 2'b00;
-                stack_wb <= 0;
-            end
+            NOP: begin end // NOP
             /* ICONST_N */ 8'h0?: begin
+                is_constpush <= 1;
                 case (opcode[3:0])
-                    4'h2: begin
-                        // push -1
-                        const_val <= 3'b111;
-                    end
-                    4'h3: begin
-                        // push 0
-                        const_val <= 3'b000;
-                    end
-                    4'h4: begin
-                        // push 1
-                        const_val <= 3'b001;
-                    end
-                    4'h5: begin
-                        // push 2
-                        const_val <= 3'b010;
-                    end
-                    4'h6: begin
-                        // push 3
-                        const_val <= 3'b011;
-                    end
-                    4'h7: begin
-                        // push 4
-                        const_val <= 3'b100;
-                    end
-                    4'h8: begin
-                        // push 5
-                        const_val <= 3'b101;
-                    end
+                    4'h2: begin const_val <= 3'b111; end // push -1
+                    4'h3: begin const_val <= 3'b000; end // push 0
+                    4'h4: begin const_val <= 3'b001; end // push 1
+                    4'h5: begin const_val <= 3'b010; end // push 2
+                    4'h6: begin const_val <= 3'b011; end // push 3
+                    4'h7: begin const_val <= 3'b100; end // push 4
+                    4'h8: begin const_val <= 3'b101; end // push 5
                     default: begin end
                 endcase
-                arg_c <= 2'b00;
-                stack_args <= 2'b00;
                 stack_wb <= 1;
-                is_constpush <= 1;
             end
             SIPUSH: begin
                 // SIPUSH (3 byte)
-                arg_c <= 2'b10;
-                stack_args <= 2'b00;
-                stack_wb <= 1;
                 is_argpush <= 1;
+                arg_c <= 2'b10;
+                stack_wb <= 1;
             end
             BIPUSH: begin
                 // BIPUSH (2 byte)
-                arg_c <= 2'b01;
-                stack_args <= 2'b00;
-                stack_wb <= 1;
                 is_argpush <= 1;
+                arg_c <= 2'b01;
+                stack_wb <= 1;
             end
             LDC: begin
                 // LDC (2 byte)
-                arg_c <= 2'b01;
-                stack_args <= 2'b00;
-                stack_wb <= 1;
                 is_ldc <= 1;
+                arg_c <= 2'b01;
+                stack_wb <= 1;
             end
             ILOAD: begin
                 // ILOAD (2 byte)
                 is_lvaread <= 1;
                 arg_c <= 2'b01;
-                stack_args <= 2'b00;
                 stack_wb <= 1;
             end
             /* ILOAD_N */ 8'h1?: begin
                 is_lvaread <= 1;
                 case (opcode[3:0])
-                    4'ha: begin
-                        lva_index <= 2'b00;
-                    end
-                    4'hb: begin
-                        lva_index <= 2'b01;
-                    end
-                    4'hc: begin
-                        lva_index <= 2'b10;
-                    end
-                    4'hd: begin
-                        lva_index <= 2'b11;
-                    end
+                    4'ha: begin lva_index <= 2'b00; end // lva index 0
+                    4'hb: begin lva_index <= 2'b01; end // lva index 1
+                    4'hc: begin lva_index <= 2'b10; end // lva index 2
+                    4'hd: begin lva_index <= 2'b11; end // lva index 3
                     default: begin end
                 endcase
-                arg_c <= 2'b00;
-                stack_args <= 2'b00;
                 stack_wb <= 1;
             end
             IALOAD: begin
                 // IALOAD
                 is_arrread <= 1;
-                arg_c <= 2'b00;
                 stack_args <= 2'b10;
                 stack_wb <= 1;
             end
@@ -178,18 +135,10 @@ module decoder(
                 // array reference is always 0
                 is_lvaread <= 1;
                 case (opcode[3:0])
-                    4'ha: begin
-                        lva_index <= 2'b00;
-                    end
-                    4'hb: begin
-                        lva_index <= 2'b01;
-                    end
-                    4'hc: begin
-                        lva_index <= 2'b10;
-                    end
-                    4'hd: begin
-                        lva_index <= 2'b11;
-                    end
+                    4'ha: begin lva_index <= 2'b00; end // lva index 0
+                    4'hb: begin lva_index <= 2'b01; end // lva index 1
+                    4'hc: begin lva_index <= 2'b10; end // lva index 2
+                    4'hd: begin lva_index <= 2'b11; end // lva index 3
                     default: begin end
                 endcase
                 arg_c <= 2'b00;
@@ -199,7 +148,6 @@ module decoder(
             BALOAD: begin
                 // BALOAD
                 is_arrread <= 1;
-                arg_c <= 2'b00;
                 stack_args <= 2'b10;
                 stack_wb <= 1;
             end
@@ -208,86 +156,53 @@ module decoder(
                 is_lvawrite <= 1;
                 arg_c <= 2'b01;
                 stack_args <= 2'b01;
-                stack_wb <= 0;
             end
             /* ISTORE_N */ 8'h3?: begin
                 is_lvawrite <= 1;
                 case (opcode[3:0])
-                    4'hb: begin
-                        lva_index <= 2'b00;
-                    end
-                    4'hc: begin
-                        // store 1
-                        lva_index <= 2'b01;
-                    end
-                    4'hd: begin
-                        // store 2
-                        lva_index <= 2'b10;
-                    end
-                    4'he: begin
-                        // store 3
-                        lva_index <= 2'b11;
-                    end
+                    4'hb: begin lva_index <= 2'b00; end // lva index 0
+                    4'hc: begin lva_index <= 2'b01; end // lva index 1
+                    4'hd: begin lva_index <= 2'b10; end // lva index 2
+                    4'he: begin lva_index <= 2'b11; end // lva index 3
                     default: begin end
                 endcase
-                arg_c <= 2'b00;
                 stack_args <= 2'b01;
-                stack_wb <= 0;
             end
             IASTORE: begin
                 // IASTORE
                 is_arrwrite <= 1;
-                arg_c <= 2'b00;
                 stack_args <= 2'b11;
-                stack_wb <= 0;
             end
             /* ASTORE_N */ 8'h4?: begin
                 // array reference is always 0
                 is_lvawrite <= 1;
                 case (opcode[3:0])
-                    4'hb: begin
-                        lva_index <= 2'b00;
-                    end
-                    4'hc: begin
-                        lva_index <= 2'b01;
-                    end
-                    4'hd: begin
-                        lva_index <= 2'b10;
-                    end
-                    4'he: begin
-                        lva_index <= 2'b11;
-                    end
+                    4'hb: begin lva_index <= 2'b00; end // lva index 0
+                    4'hc: begin lva_index <= 2'b01; end // lva index 1
+                    4'hd: begin lva_index <= 2'b10; end // lva index 2
+                    4'he: begin lva_index <= 2'b11; end // lva index 3
                     default: begin end
                 endcase
-                arg_c <= 2'b00;
                 stack_args <= 2'b01;
-                stack_wb <= 0;
             end
             BASTORE: begin
                 // BASTORE
                 is_arrwrite <= 1;
-                arg_c <= 2'b00;
                 stack_args <= 2'b11;
-                stack_wb <= 0;
             end
             POP: begin
                 // POP
                 is_pop <= 1;
-                arg_c <= 2'b00;
                 stack_args <= 2'b01;
-                stack_wb <= 0;
             end
             DUP: begin
                 // DUP
                 is_dup <= 1;
-                arg_c <= 2'b00;
                 stack_args <= 2'b01;
-                stack_wb <= 0;
             end
             /* IADD, ISUB, IMUL, IDIV */ 8'h6?: begin
                 alu_op <= {opcode[7], opcode[4], opcode[3], opcode[2]};
                 is_aluop <= 1;
-                arg_c <= 2'b00;
                 stack_args <= 2'b10;
                 stack_wb <= 1;
             end
@@ -306,7 +221,6 @@ module decoder(
                     alu_op <= {opcode[7], opcode[4], opcode[3], opcode[2]};
                 end
                 is_aluop <= 1;
-                arg_c <= 2'b00;
                 stack_args <= 2'b10;
                 stack_wb <= 1;
             end
@@ -314,8 +228,6 @@ module decoder(
                 // IINC (3 byte)
                 is_iinc <= 1;
                 arg_c <= 2'b10;
-                stack_args <= 2'b00;
-                stack_wb <= 0;
             end
             /* IOR, IXOR */ 8'h8?: begin
                 alu_op <= {opcode[7], opcode[4], opcode[2], opcode[1]};
@@ -326,28 +238,11 @@ module decoder(
             GOTO: begin
                 // GOTO (3 byte)
                 arg_c <= 2'b10;
-                stack_args <= 2'b00;
-                stack_wb <= 0;
                 is_goto <= 1;
             end
-            IRETURN: begin
-                // IRETURN
-                arg_c <= 2'b00;
-                stack_args <= 2'b00;
-                stack_wb <= 0;
-            end
-            ARETURN: begin
-                // ARETURN
-                arg_c <= 2'b00;
-                stack_args <= 2'b00;
-                stack_wb <= 0;
-            end
-            RETURN: begin
-                // RETURN
-                arg_c <= 2'b00;
-                stack_args <= 2'b00;
-                stack_wb <= 0;
-            end
+            IRETURN: begin end
+            ARETURN: begin end
+            RETURN: begin end
             NEWARRAY: begin
                 is_newarray <= 1;
                 arg_c <= 2'b01;
@@ -356,94 +251,82 @@ module decoder(
             end
             /* IFCOND, IF_ICMPCOND (3 byte) */ 8'b10??????: begin
                 if (opcode >= 8'h99 || opcode <= 8'ha4) begin
+                    is_cmp <= 1;
                     case (opcode[3:0])
                         4'h9: begin
                             // IFEQ
                             stack_args <= 2'b01;
-                            stack_wb <= 0;
                             cmp_type[3] <= 0;
                             cmp_type[2:0] <= EQ;
                         end
                         4'ha: begin
                             // IFNE
                             stack_args <= 2'b01;
-                            stack_wb <= 0;
                             cmp_type[3] <= 0;
                             cmp_type[2:0] <= NE;
                         end
                         4'hb: begin
                             // IFLT
                             stack_args <= 2'b01;
-                            stack_wb <= 0;
                             cmp_type[3] <= 0;
                             cmp_type[2:0] <= LT;
                         end
                         4'hc: begin
                             // IFGE
                             stack_args <= 2'b01;
-                            stack_wb <= 0;
                             cmp_type[3] <= 0;
                             cmp_type[2:0] <= GE;
                         end
                         4'hd: begin
                             // IFGT
                             stack_args <= 2'b01;
-                            stack_wb <= 0;
                             cmp_type[3] <= 0;
                             cmp_type[2:0] <= GT;
                         end
                         4'he: begin
                             // IFLE
                             stack_args <= 2'b01;
-                            stack_wb <= 0;
                             cmp_type[3] <= 0;
                             cmp_type[2:0] <= LE;
                         end
                         4'hf: begin
                             // IF_ICMPEQ
                             stack_args <= 2'b10;
-                            stack_wb <= 0;
                             cmp_type[3] <= 1;
                             cmp_type[2:0] <= EQ;
                         end
                         4'h0: begin
                             // IF_ICMPNE
                             stack_args <= 2'b10;
-                            stack_wb <= 0;
                             cmp_type[3] <= 1;
                             cmp_type[2:0] <= NE;
                         end
                         4'h1: begin
                             // IF_ICMPLT
                             stack_args <= 2'b10;
-                            stack_wb <= 0;
                             cmp_type[3] <= 1;
                             cmp_type[2:0] <= LT;
                         end
                         4'h2: begin
                             // IF_ICMPGE
                             stack_args <= 2'b10;
-                            stack_wb <= 0;
                             cmp_type[3] <= 1;
                             cmp_type[2:0] <= GE;
                         end
                         4'h3: begin
                             // IF_ICMPGT
                             stack_args <= 2'b10;
-                            stack_wb <= 0;
                             cmp_type[3] <= 1;
                             cmp_type[2:0] <= GT;
                         end
                         4'h4: begin
                             // IF_ICMPLE
                             stack_args <= 2'b10;
-                            stack_wb <= 0;
                             cmp_type[3] <= 1;
                             cmp_type[2:0] <= LE;
                         end
                         default: begin end
                     endcase
-                    is_cmp <= 1;
                     arg_c <= 2'b10;
                 end
             end
