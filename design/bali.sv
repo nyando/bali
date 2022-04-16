@@ -103,6 +103,7 @@ module bali(
                 state <= IDLE;
                 if (rxdone) begin
                     proglength <= rxout;
+                    progmemaddr <= 8'h00;
                     txin <= rxout;
                     txsend <= 1;
                     state <= LOADPROG;
