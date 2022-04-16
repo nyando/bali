@@ -1,25 +1,25 @@
 `timescale 10ns / 10ns
 
-module uart_rx (
+module uart_rx #(
+    // assuming 100 MHz clock frequency and 9600 baud/s, modify this as needed
+    parameter CYCLES_PER_BIT = 10400
+) (
     input clk,
     input rx,
     output done,
     output [7:0] out
 );
     
-    // assuming 1 MHz clock frequency and 9600 baud/s, modify this as needed
-    parameter CYCLES_PER_BIT = 104; 
-
     const logic [1:0] IDLE  = 2'b00;
     const logic [1:0] START = 2'b01;
     const logic [1:0] DATA  = 2'b10;
     const logic [1:0] STOP  = 2'b11;
 
-    logic [7:0] value;  // assigned to "out" output; accumulator for received byte value
-    logic rx_done;      // assigned to "done" output; set to HI for one cycle when byte received
-    logic [1:0] state;  // internal representation of FSM state
+    logic [7:0] value;   // assigned to "out" output; accumulator for received byte value
+    logic rx_done;       // assigned to "done" output; set to HI for one cycle when byte received
+    logic [1:0] state;   // internal representation of FSM state
     logic [15:0] cycles; // counter for clock cycles per received bit
-    logic [2:0] index;  // counter for bit indices received
+    logic [2:0] index;   // counter for bit indices received
 
     initial begin
         state <= IDLE;

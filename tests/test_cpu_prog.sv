@@ -1,6 +1,10 @@
 `timescale 10ns / 10ns
 
-module test_cpu_prog #(parameter PROG = "tests/progs/array_ops.mem") (input rst);
+module test_cpu_prog #(
+    parameter PROG = "tests/progs/array_ops.mem"
+) (
+    input rst
+);
 
     logic clk;
 

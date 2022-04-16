@@ -1,14 +1,14 @@
 `timescale 10ns / 10ns
 
-module uart_tx(
+module uart_tx #(
+    parameter CYCLES_PER_BIT = 10400
+) (
     input clk,
     input [7:0] in,
     input send,
     output tx,
     output done
 );
-
-    parameter CYCLES_PER_BIT = 104;
 
     const logic [1:0] IDLE  = 2'b00;
     const logic [1:0] START = 2'b01;
