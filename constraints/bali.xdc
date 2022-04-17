@@ -15,7 +15,8 @@ set_property -dict {PACKAGE_PIN D10 IOSTANDARD LVCMOS33} [get_ports {tx}]
 set_property -dict {PACKAGE_PIN D9 IOSTANDARD LVCMOS33} [get_ports {rst}]; 
 
 # executing LED
-set_property -dict { PACKAGE_PIN G6 IOSTANDARD LVCMOS33 } [get_ports { executing }];
+set_property -dict { PACKAGE_PIN G6 IOSTANDARD LVCMOS33 } [get_ports { exec[0] }];
+set_property -dict { PACKAGE_PIN G3 IOSTANDARD LVCMOS33 } [get_ports { exec[1] }];
 
 # LEDs to indicate current progmem address
 #set_property -dict {PACKAGE_PIN H5 IOSTANDARD LVCMOS33} [get_ports {addr[0]}]

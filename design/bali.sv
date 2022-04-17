@@ -5,7 +5,7 @@ module bali(
     input rst,
     input rx,
     output tx,
-    output executing
+    output [1:0] exec
 );
     
     logic [7:0] opcode;
@@ -168,6 +168,6 @@ module bali(
         endcase
     end
 
-    assign executing = state[1];
+    assign exec = state;
 
 endmodule

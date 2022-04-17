@@ -18,7 +18,7 @@ module test_bali_program();
     logic rx;
     logic tx;
     logic [7:0] addr;
-    logic exec;
+    logic [1:0] exec;
 
     sim_clk clock(
         .clk(clk)
@@ -29,7 +29,7 @@ module test_bali_program();
         .rst(rst),
         .rx(rx),
         .tx(tx),
-        .executing(exec)
+        .exec(exec)
     );
 
     initial begin
