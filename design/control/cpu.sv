@@ -21,7 +21,7 @@ module cpu(
     logic arrdone;                  // hi for one clock cycle when array operation is completed
 
     arrayblock #(
-        .ARR_SIZE(256)
+        .ARR_SIZE(2048)
     ) staticarray (
         .clk(clk),
         .rst(rst),
@@ -42,7 +42,7 @@ module cpu(
 
     // local variable array holds variables for all methods that have not returned yet
     arrayblock #(
-        .ARR_SIZE(256)
+        .ARR_SIZE(2048)
     ) localvars (
         .clk(clk),
         .rst(rst),
@@ -56,7 +56,7 @@ module cpu(
 
     // lva I/O for control module
     logic [7:0] lvaindex;          // method-local index of local variable to read/write
-    logic [7:0] lvaoffset;         // absolute address in the LVA is LVA offset - index
+    logic [15:0] lvaoffset;        // absolute address in the LVA is LVA offset - index
     logic opdone;                  // hi for one clock cycle when instruction finishes execution
     logic [15:0] offset;           // offset of next instruction to current pc value
     
@@ -108,13 +108,13 @@ module cpu(
     // call stack I/O, controlled only by CPU module
     logic callpush;                 // hi for write, lo for read
     logic calltrigger;              // hi for one clock cycle to trigger read/write
-    logic [31:0] callwrite;         // value to write to callstack
-    logic [31:0] callread;          // value to read from callstack
+    logic [39:0] callwrite;         // value to write to callstack
+    logic [39:0] callread;          // value to read from callstack
     logic calldone;                 // hi for one clock cycle when read/write done
 
     stack #(
-        .STACKDATA(32),
-        .STACKSIZE(32)
+        .STACKDATA(40),
+        .STACKSIZE(256)
     ) callstack (
         .clk(clk),
         .rst(rst),
@@ -227,8 +227,8 @@ module cpu(
                 invoke_state <= CS_PUSH;
             end
             CS_PUSH: begin
-                callwrite[31:16] = pc + 3;
-                callwrite[15:0] = { lvamax_caller, lvaoffset - lvamax };
+                callwrite[39:24] = pc + 3;
+                callwrite[23:0] = { lvamax_caller, lvaoffset - lvamax };
                 callpush <= 1;
                 calltrigger <= 1;
                 invoke_state <= CS_WAIT;
@@ -247,9 +247,9 @@ module cpu(
             end
             RET: begin
                 if (calldone) begin
-                    pc <= callread[31:16];
-                    lvamax[7:0] <= callread[15:8];
-                    lvaoffset <= callread[7:0];
+                    pc <= callread[39:24];
+                    lvamax[7:0] <= callread[23:16];
+                    lvaoffset <= callread[15:0];
                     invoke_state <= INVOKEDONE;
                 end
                 calltrigger <= 0;
@@ -278,7 +278,7 @@ module cpu(
         if (rst) begin
             pc <= 16'h0000;
             data_index <= 16'h0000;
-            lvaoffset <= 8'h00;
+            lvaoffset <= 16'h0000;
             lvamax <= 8'h00;
             invoke_state <= PARAMWAIT;
         end

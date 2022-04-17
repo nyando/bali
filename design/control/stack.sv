@@ -14,8 +14,8 @@ module stack #(
 );
 
     logic writing;
-    logic [31:0] word_in;
-    logic [31:0] word_out;
+    logic [STACKDATA - 1:0] word_in;
+    logic [STACKDATA - 1:0] word_out;
     logic [15:0] addr;
 
     block_ram #(
