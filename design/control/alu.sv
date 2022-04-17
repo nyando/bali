@@ -10,8 +10,6 @@ module alu(
     const logic [3:0] IADD = 4'b0000;
     const logic [3:0] ISUB = 4'b0001;
     const logic [3:0] IMUL = 4'b0010;
-    const logic [3:0] IDIV = 4'b0011;
-    const logic [3:0] IREM = 4'b0100;
     const logic [3:0] INEG = 4'b0101;
     const logic [3:0] ISHL = 4'b1100;
     const logic [3:0] ISHR = 4'b1101;
@@ -33,14 +31,6 @@ module alu(
                 // imul: multiply two integers
                 IMUL: begin
                     result = operand_a[15:0] * operand_b[15:0];
-                end
-                // idiv: divide two integers
-                IDIV: begin
-                    result = operand_a[15:0] / operand_b[15:0];
-                end
-                // irem: modulo of two integers
-                IREM: begin
-                    result = operand_a[15:0] % operand_b[15:0];
                 end
                 // iand: bitwise AND of two integers
                 IAND: begin
