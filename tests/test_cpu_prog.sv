@@ -1,7 +1,7 @@
 `timescale 10ns / 10ns
 
 module test_cpu_prog #(
-    parameter PROG = "tests/progs/array_ops.mem"
+    parameter PROG = "tests/progs/arrayops.mem"
 ) (
     input rst
 );

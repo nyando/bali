@@ -11,11 +11,11 @@ module test_sampleprogs();
 
     logic rst;
 
-    test_cpu_prog #(.PROG("tests/progs/intreverse.mem")) intreversetest(.rst(rst));
-    test_cpu_prog #(.PROG("tests/progs/primesieve.mem")) primesievetest(.rst(rst));
-    test_cpu_prog #(.PROG("tests/progs/quicksort.mem")) quicksorttest(.rst(rst));
-    test_cpu_prog #(.PROG("tests/progs/recursivemath.mem")) recursivemathtest(.rst(rst));
-    test_cpu_prog #(.PROG("tests/progs/towers.mem")) towerstest(.rst(rst));
+    test_cpu_prog #(.PROG("tests/progs/IntReverse.mem")) intreversetest(.rst(rst));
+    test_cpu_prog #(.PROG("tests/progs/PrimeSieve.mem")) primesievetest(.rst(rst));
+    test_cpu_prog #(.PROG("tests/progs/QuickSort.mem")) quicksorttest(.rst(rst));
+    test_cpu_prog #(.PROG("tests/progs/RecursiveMath.mem")) recursivemathtest(.rst(rst));
+    test_cpu_prog #(.PROG("tests/progs/TowersOfHanoi.mem")) towerstest(.rst(rst));
 
     logic [31:0] expected;
     logic [31:0] found;
@@ -31,31 +31,31 @@ module test_sampleprogs();
         rst = 0;
         #11000;
 
-        assert (intreversetest.uut_cpu.op_code == 8'h00) else $fatal(1, "opcode in integer reverse test not NOP, program did not terminate correctly");
+        assert (intreversetest.uut_cpu.op_code == 8'hff) else $fatal(1, "opcode in integer reverse test not NOP, program did not terminate correctly");
         expected = 32'd54321;
         found = intreversetest.uut_cpu.eval_stack.memory.mem[0];
         assert (expected == found) else $fatal(1, "expected final value %8h on stack, found %8h", expected, found);
 
-        assert (primesievetest.uut_cpu.op_code == 8'h00) else $fatal(1, "opcode in prime sieve test not NOP, program did not terminate correctly");
+        assert (primesievetest.uut_cpu.op_code == 8'hff) else $fatal(1, "opcode in prime sieve test not NOP, program did not terminate correctly");
         for (int i = 2; i < primesieve_size; i++) begin
             expected = isprime(i);
             found = primesievetest.uut_cpu.staticarray.arrmem.mem[i] > 0;
             assert (expected == found) else $fatal(1, "expected primality value of %8h to be %8h, found %8h", i, expected, found);
         end
         
-        assert (quicksorttest.uut_cpu.op_code == 8'h00) else $fatal(1, "opcode in quicksort test not NOP, program did not terminate correctly");
+        assert (quicksorttest.uut_cpu.op_code == 8'hff) else $fatal(1, "opcode in quicksort test not NOP, program did not terminate correctly");
         for (int i = 0; i < $size(mem); i++) begin
             expected = mem[i];
             found = quicksorttest.uut_cpu.staticarray.arrmem.mem[i]; 
             assert (expected == found) else $fatal(1, "expected %8h in sorted array at %d, found %8h", expected, i, found);
         end
 
-        assert (recursivemathtest.uut_cpu.op_code == 8'h00) else $fatal(1, "opcode in recursive math test not NOP, program did not terminate correctly");
+        assert (recursivemathtest.uut_cpu.op_code == 8'hff) else $fatal(1, "opcode in recursive math test not NOP, program did not terminate correctly");
         expected = 32'h4;
         found = recursivemathtest.uut_cpu.eval_stack.memory.mem[0];
         assert (expected == found) else $fatal(1, "expected final value %8h on stack, found %8h", expected, found);
 
-        assert (towerstest.uut_cpu.op_code == 8'h00) else $fatal(1, "opcode in towers of hanoi test not NOP, program did not terminate correctly");
+        assert (towerstest.uut_cpu.op_code == 8'hff) else $fatal(1, "opcode in towers of hanoi test not NOP, program did not terminate correctly");
         expected = 32'h1;
         found = towerstest.uut_cpu.callstack.top_of_stack;
         assert (expected == found) else $fatal(1, "expected final top of callstack value %8h, found %8h", expected, found);
