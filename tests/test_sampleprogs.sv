@@ -51,7 +51,7 @@ module test_sampleprogs();
         end
 
         assert (recursivemathtest.uut_cpu.op_code == 8'hff) else $fatal(1, "opcode in recursive math test not NOP, program did not terminate correctly");
-        expected = 32'h4;
+        expected = 32'h9;
         found = recursivemathtest.uut_cpu.eval_stack.memory.mem[0];
         assert (expected == found) else $fatal(1, "expected final value %8h on stack, found %8h", expected, found);
 

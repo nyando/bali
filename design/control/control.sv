@@ -338,10 +338,6 @@ module control(
                             // one argument to pop from stack
                             if (isaluop || iscmp) begin
                                 operand_a[31:0] <= evalread[31:0];
-                                if (isdivrem) begin
-                                    divtrigger <= 1;
-                                    state <= DIV_WAIT;
-                                end
                             end
                             if (iscmp) begin
                                 // if cmptype[3] is set, operation is ICMP, otherwise compare with zero
@@ -367,7 +363,12 @@ module control(
                                 state <= DUP_START;
                             end
                             else begin
-                                state <= EXEC;
+                                if (isdivrem) begin
+                                    divtrigger <= 1;
+                                    state <= DIV_WAIT;
+                                end else begin
+                                    state <= EXEC;
+                                end
                             end
                         end
                         default: begin end
