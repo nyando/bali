@@ -32,7 +32,7 @@ module test_sampleprogs();
         #11000;
 
         assert (intreversetest.uut_cpu.op_code == 8'hff) else $fatal(1, "opcode in integer reverse test not NOP, program did not terminate correctly");
-        expected = 32'd54321;
+        expected = 32'd321;
         found = intreversetest.uut_cpu.eval_stack.memory.mem[0];
         assert (expected == found) else $fatal(1, "expected final value %8h on stack, found %8h", expected, found);
 

@@ -7,6 +7,7 @@ module decoder(
     input [7:0] opcode,
     output [3:0] aluop,
     output isaluop,
+    output isdivrem,
     output iscmp,
     output [3:0] cmptype,
     output isargpush,
@@ -30,6 +31,7 @@ module decoder(
 
     logic [3:0] alu_op;
     logic is_aluop;
+    logic is_divrem;
     logic is_cmp;
     logic [3:0] cmp_type;
     logic is_constpush;
@@ -54,6 +56,7 @@ module decoder(
         // initialize default values for each output
         alu_op <= 4'h0;
         is_aluop <= 0;
+        is_divrem <= 0;
         is_cmp <= 0;
         cmp_type <= 4'h0;
         is_argpush <= 0;
@@ -203,6 +206,9 @@ module decoder(
                 is_aluop <= 1;
                 stack_args <= 2'b10;
                 stack_wb <= 1;
+                if (opcode == IDIV) begin
+                    is_divrem <= 1;
+                end
             end
             INEG: begin
                 // INEG
@@ -217,6 +223,7 @@ module decoder(
                 end
                 else begin /* IREM */
                     alu_op <= {opcode[7], opcode[4], opcode[3], opcode[2]};
+                    is_divrem <= 1;
                 end
                 is_aluop <= 1;
                 stack_args <= 2'b10;
@@ -330,6 +337,7 @@ module decoder(
 
     assign aluop = alu_op;
     assign isaluop = is_aluop;
+    assign isdivrem = is_divrem;
     assign iscmp = is_cmp;
     assign cmptype = cmp_type;
     assign isargpush = is_argpush;

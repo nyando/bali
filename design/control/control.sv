@@ -43,6 +43,7 @@ module control(
     // decoder output declaration
     logic [3:0] aluop;              // operation code to pass to ALU
     logic isaluop;                  // operation uses the ALU
+    logic isdivrem;                 // operation is IDIV or IREM (requires divider circuit)
     logic iscmp;                    // operation is a conditional jump
     logic [3:0] cmptype;            // differentiates EQ/NE/LT/LE/GE/GT
     logic isconstpush;              // operation pushes constant to stack
@@ -67,6 +68,7 @@ module control(
         .opcode(op_code),
         .aluop(aluop),
         .isaluop(isaluop),
+        .isdivrem(isdivrem),
         .iscmp(iscmp),
         .cmptype(cmptype),
         .isconstpush(isconstpush),
@@ -100,6 +102,21 @@ module control(
         .result(result)
     );
 
+    logic divtrigger, divdone;
+    logic [31:0] divquot, divrem;
+
+    divmod #(
+        .WIDTH(32)
+    ) divider (
+        .clk(clk),
+        .trigger(divtrigger),
+        .done(divdone),
+        .a(operand_a),
+        .b(operand_b),
+        .q(divquot),
+        .r(divrem)
+    );
+
     logic [1:0] stackarg_counter;   // number of arguments to pop from the stack
     logic [1:0] stackwrite_counter; // number of arguments to write to stack
 
@@ -109,17 +126,18 @@ module control(
     const logic [3:0] FETCH       = 4'b0001;
     const logic [3:0] DECODE      = 4'b0010;
     const logic [3:0] S_LOAD      = 4'b0011;
-    const logic [3:0] LVA_START   = 4'b0100;
-    const logic [3:0] LVA_WAIT    = 4'b0101;
-    const logic [3:0] LVA_INC     = 4'b0110;
-    const logic [3:0] LVA_INCWAIT = 4'b0111;
-    const logic [3:0] ARR_START   = 4'b1000;
-    const logic [3:0] ARR_WAIT    = 4'b1001;
-    const logic [3:0] DUP_START   = 4'b1010;
-    const logic [3:0] DUP_WAIT    = 4'b1011;
-    const logic [3:0] COMP        = 4'b1100;
-    const logic [3:0] EXEC        = 4'b1101;
-    const logic [3:0] WRITE       = 4'b1110;
+    const logic [3:0] DIV_WAIT    = 4'b0100;
+    const logic [3:0] LVA_START   = 4'b0101;
+    const logic [3:0] LVA_WAIT    = 4'b0110;
+    const logic [3:0] LVA_INC     = 4'b0111;
+    const logic [3:0] LVA_INCWAIT = 4'b1000;
+    const logic [3:0] ARR_START   = 4'b1001;
+    const logic [3:0] ARR_WAIT    = 4'b1010;
+    const logic [3:0] DUP_START   = 4'b1011;
+    const logic [3:0] DUP_WAIT    = 4'b1100;
+    const logic [3:0] COMP        = 4'b1101;
+    const logic [3:0] EXEC        = 4'b1110;
+    const logic [3:0] WRITE       = 4'b1111;
 
     // after done signal, wait while CPU fetches next instruction
     const logic [1:0] FETCH_WAIT = 2'b11;
@@ -320,6 +338,10 @@ module control(
                             // one argument to pop from stack
                             if (isaluop || iscmp) begin
                                 operand_a[31:0] <= evalread[31:0];
+                                if (isdivrem) begin
+                                    divtrigger <= 1;
+                                    state <= DIV_WAIT;
+                                end
                             end
                             if (iscmp) begin
                                 // if cmptype[3] is set, operation is ICMP, otherwise compare with zero
@@ -353,6 +375,19 @@ module control(
                 end
                 else begin
                     stack_trigger <= 0;
+                end
+            end
+            DIV_WAIT: begin
+                divtrigger <= 0;
+                if (divdone) begin
+                    if (op_code == IDIV) begin
+                        stack_write[31:0] <= divquot[31:0];
+                    end else if (op_code == IREM) begin
+                        stack_write[31:0] <= divrem[31:0];
+                    end
+                    stack_push <= 1;
+                    state <= WRITE;
+                    stack_trigger <= 1;
                 end
             end
             LVA_START: begin
