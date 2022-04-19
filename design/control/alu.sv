@@ -44,9 +44,9 @@ module alu(
                 IXOR: begin
                     result = operand_a ^ operand_b;
                 end
-                // ineg: bitwise negation of two integers
+                // ineg: two's complement additive inverse of an integer
                 INEG: begin
-                    result = ~operand_a;
+                    result = ~operand_a + 1;
                 end
                 // ishl: shift integer left
                 ISHL: begin
