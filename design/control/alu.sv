@@ -17,7 +17,7 @@ module alu(
     const logic [3:0] IOR  = 4'b1000;
     const logic [3:0] IXOR = 4'b1001;
 
-    always @ (op_select or operand_a or operand_b)
+    always_comb
         begin
             case (op_select)
                 // iadd: add two integers
