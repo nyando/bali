@@ -8,9 +8,7 @@ module bali16(
     output [1:0] exec
 );
     
-    logic [7:0] opcode;
-    logic [7:0] arg1;
-    logic [7:0] arg2;
+    logic [7:0] opcode, arg1, arg2;
 
     logic [15:0] pc;
     logic [7:0] dataindex;
@@ -29,8 +27,7 @@ module bali16(
     );
 
     logic [7:0] txin;
-    logic txsend;
-    logic txdone;
+    logic txsend, txdone;
 
     uart_tx #(
         .CYCLES_PER_BIT(10400)
@@ -83,9 +80,9 @@ module bali16(
     logic [15:0] proglength;
     logic fstbyte;
 
-    logic [31:0] cycles;
+    logic [63:0] cycles;
     logic rwstate;
-    logic [1:0] bytecount;
+    logic [2:0] bytecount;
 
     always @ (posedge clk) begin
         if (cpurst) begin
@@ -122,7 +119,7 @@ module bali16(
                 txsend <= 0;
                 fstbyte <= 0;
                 if (progmemaddr == proglength) begin
-                    cycles <= 32'h0000_0000;
+                    cycles <= 64'h0000_0000_0000_0000;
                     cpurst <= 1;
                     if (txdone) begin
                         state <= EXECUTE;
@@ -146,7 +143,7 @@ module bali16(
                 if (opcode == 8'hff) begin
                     state <= DONE;
                     txin <= cycles[7:0];
-                    bytecount <= 2'b01;
+                    bytecount <= 3'b001;
                     txsend <= 1;
                 end
                 cpurst <= 0;
@@ -156,16 +153,32 @@ module bali16(
                 txsend <= 0;
                 if (txdone) begin
                     case (bytecount)
-                        2'b01: begin
+                        3'b001: begin
                             txin <= cycles[15:8];
                             txsend <= 1;
                         end
-                        2'b10: begin
+                        3'b010: begin
                             txin <= cycles[23:16];
                             txsend <= 1;
                         end
-                        2'b11: begin
+                        3'b011: begin
                             txin <= cycles[31:24];
+                            txsend <= 1;
+                        end
+                        3'b100: begin
+                            txin <= cycles[39:32];
+                            txsend <= 1;
+                        end
+                        3'b101: begin
+                            txin <= cycles[47:40];
+                            txsend <= 1;
+                        end
+                        3'b110: begin
+                            txin <= cycles[55:48];
+                            txsend <= 1;
+                        end
+                        3'b111: begin
+                            txin <= cycles[63:56];
                             txsend <= 1;
                             state <= IDLE;
                         end
